@@ -7,7 +7,7 @@ let BaseHost = process.__server.baseHost;
 
 export class Host extends BaseHost{
   constructor( ) {
-    this._AddAllowHost( "aeserver.dev", "development" );
+    this._AddAllowHost( "example.dev", "development" );
     this.allowedHosts = {
       
     };

@@ -32,5 +32,4 @@ process.on('SIGINT', function() {
 });
 
 //Start app using traceur
-process.trequest = traceur.require;
 traceur.require( "./start.es.js" );
