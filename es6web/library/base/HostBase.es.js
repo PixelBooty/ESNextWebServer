@@ -3,13 +3,163 @@
  * and open the template in the editor.
  */
 
+import { DynamicLoader } from "../DynamicLoader.es.js";
+
+let fs = require( "fs" );
+
 export class HostBase{
-  constructor( ) {
-    console.log( "do nonta" );
+  constructor( hostManager, server, coreLibrary, hostDirectory ) {
+    this._server = server;
+    this._hostManager = hostManager;
+    this._allowedHosts = [];
+    this._modules = {};
+    this._fileIndex = {
+      files : {},
+      directories : {}
+    }
+    this._modualDirectory = "";
+    this._sharedHost = false;
+    if( hostDirectory === "Hosts/shared" ){
+      this._sharedHost = true;
+    }
+    this._hostDirectory = hostDirectory;
+    this._coreLibrary = coreLibrary;
+    this.SetupHost();
+    this._InitModules();
+    this._InitFileIndex();
   }
   
-  _AddAllowHost( hostName, nameType, environment ){
-    this._name = hostName;
+  get manager(){
+    return this._hostManager;
+  }
+  
+  get assetDirectory(){
+    return this._assetDirectory;
+  }
+  
+  SetupHost(){}
+  
+  _InitModules(){
+    this._modualDirectory = this._hostDirectory + "/Modules/";
+    let moduleBase = this._coreLibrary.AddLib( "base/ModuleBase", null, this._modualDirectory, this._RebuildModuleBase.bind( this ) );
+    if( moduleBase !== null ){
+      this._RebuildModuleBase();
+    }
+  }
+  
+  _AddModuleListener( path, libObject ){
+    this._AddModule( libObject.path, new libObject.uncompiled( this, this._server, this._coreLibrary, libObject.path.replace( "/Module.es.js", "" ) ) );
+  }
+  
+  _RebuildModuleBase( libObject ){
+    let moduleLib = this._coreLibrary.GetPathListener( this._modualDirectory );
+    this._coreLibrary.AddPathListener( this._modualDirectory, "Module", null, this._AddModuleListener.bind( this ), 1 );
+    if( moduleLib !== null ){
+      for( let module in moduleLib.libs ){
+        this._coreLibrary.ForceRecompile( this._modualDirectory, module );
+      }
+    }
+  }
+  
+  _AddAllowedHost( hostName, environment, host ){
+    this._allowedHosts.push( { hostName, environment, host } );
+  }
+  
+  CheckHost( requestedHost ){
+    for( let host of this._allowedHosts ){
+      if( typeof( host.hostName ) === "string" ){
+        if( host.hostName === requestedHost ){
+          return host;
+        }
+      }
+      else{
+        // Regex
+      }
+    }
+    
+    return null;
+  }
+  
+  CreateRouting( modual, view, controller, event ){
+    console.log( "test" );
+  }
+  
+  HasModule( moduleName ){
+    return this._modules[moduleName] !== undefined;
+  }
+  
+  get defaultModule(){
+    return this._defaultModule;
+  }
+  
+  GetModule( moduleName ){
+    if( this._modules[moduleName.toLowerCase()] !== undefined ){
+      return this._modules[moduleName.toLowerCase()];
+    }
+    
+    return null;
+  }
+  
+  _AddModule( modulePath, moduleObject ){
+    let path = modulePath.replace( this._modualDirectory, "" ).replace( "/Module.es.js", "" ).toLowerCase();
+    this._modules[path] = moduleObject;
+  }
+  
+  _InitFileIndex(){
+    this._assetDirectory = this._hostDirectory + "/public/";
+    let watcherlib = this._coreLibrary.AddIndexWatcher( this._assetDirectory, this._OnIndexChange.bind( this ) );
+    if( watcherlib !== null ){
+      this._RebuildFileIndex( watcherlib.indexTree );
+    }
+  }
+  
+  _RebuildFileIndex( pathIndex ){
+    this._fileIndex.files = {};
+    this._fileIndex.directories = {};
+    for( let file in pathIndex.files ){
+      this._fileIndex.files[file.toLowerCase()] = file;
+    }
+    for( let dir in pathIndex.directories ){
+      this._fileIndex.directories[dir.toLowerCase()] = dir;
+    }
+  }
+  
+  _OnIndexChange( indexWatchObject, type, event, path, dirPath, hash ){
+    if( event === "add" ){
+      if( type === "file" ){
+        this._fileIndex.files[( dirPath + path ).toLowerCase()] = dirPath + path;
+      }
+      else{
+        this._fileIndex.directories[path.toLowerCase()] = path;
+      }
+      
+    }
+    else if( event === "change" ){
+      if( type === "file" ){
+        this._fileIndex.files[( dirPath + path ).toLowerCase()] = dirPath + path;
+      }
+    }
+    else if ( event === "remove" ){
+      if( type === "file" ){
+        console.log( "remove file from index" );
+      }
+      else{
+        console.log( "remove directory from index" );
+      }
+    }
+  }
+  
+  GetFile( fileName ){
+    if( !this._sharedHost ){
+      var sharedHost = this._hostManager.PullHost( "shared" );
+      if( sharedHost ){
+        let sharedFile = this._hostManager.PullHost( "shared" ).GetFile( fileName );
+        if( sharedFile !== null ){
+          return sharedFile;
+        }
+      }
+    }
+    return this._fileIndex.files[this._assetDirectory.toLowerCase() + fileName] || null;
   }
   
 }
