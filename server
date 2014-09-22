@@ -1,57 +1,44 @@
 #!/bin/bash
 
 command=$1
-userLogin=""
-user=$2
-scriptDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-if [ "$2" = "" ]; then
-  user=$(cat $scriptDir/server-user)
-fi
-
-if id -u $user >/dev/null 2>&1; then
-  userLogin="su $(cat $scriptDir/server-user)"
-fi
-
-serverName=$(pwd)
-serverName=${serverName##*/}
-serverName=${serverName%-server}
+serverName="ES6 Web Server"
 
 if [ "$command" != "" ]; then
   dir=$(pwd)
   case $command in
     "start")
-      $userLogin ./shared/nserver-start.sh
+      ./bootstrap/nserver-start.sh
       if [ "$serverName" = "web" ]; then
         service httpd restart
       fi
       ;;
     "restart")
-      $userLogin ./shared/nserver-stop.sh
-      $userLogin ./shared/nserver-start.sh
+      ./bootstrap/nserver-stop.sh
+      ./bootstrap/nserver-start.sh
       if [ "$serverName" = "web" ]; then
         service httpd restart
       fi
       ;;
     "startDebug")
       echo "Debug version of server can only be viewed direct port access."
-      $userLogin ./shared/nserver-debugStart.sh
+      ./bootstrap/nserver-debugStart.sh
       ;;
     "status")
-      $userLogin ./shared/nserver-status.sh
+      ./bootstrap/nserver-status.sh
       ;;
     "stop")
-      $userLogin ./shared/nserver-stop.sh
+      ./bootstrap/nserver-stop.sh
       ;;
     "clearLog")
       truncate -s 0 server.log
       ;;
     "assureRunning")
-      $userLogin ./shared/nserver-assure.sh
+      ./bootstrap/nserver-assure.sh
       ;;
     *)
       echo "Invalid server command."
       ;;
   esac
 else
-  echo "Enter a server command start|stop|status"
+  echo "Enter a server command start|startDebug|stop|status|clearLog|assureRunning"
 fi
