@@ -1,5 +1,10 @@
-//Import the gateway sever
-import { WebServer } from "./WebServer.es.js";
+/* 
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 
-//Start the gateway server
-let server = new WebServer();
+import { ServerLibrary } from './es6web/ServerLibrary.es.js';
+
+
+let server = new ServerLibrary();

@@ -7,11 +7,8 @@ let BaseHost = process.__server.baseHost;
 
 export class Host extends BaseHost{
   constructor( ) {
-    this._AddAllowHost( "example.dev", "development" );
-    this.allowedHosts = {
-      
-    };
-    console.log( "host");
+    this._defaultModule = "site";
+    this._AddAllowedHost( "example.dev", "development", this );
   }
   
 }
