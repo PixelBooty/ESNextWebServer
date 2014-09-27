@@ -1,4 +1,3 @@
-import { config } from "../config.es.js";
 import { DynamicLoader } from "./library/DynamicLoader.es.js";
 
 require( "./ProtoTypes.js" );
@@ -9,7 +8,7 @@ export class ServerLibrary{
     this._serverLibrary = null;
     this._server = null;
     this._webServer = null;
-    this._config = config;
+    this._config = process.config;
     this._DefaultConfigs();
     this._InitWebServer();
     this._InitLibrary();
@@ -53,6 +52,10 @@ export class ServerLibrary{
         console.log( "Server Loaded." );
       }
     );
+    GLOBAL.wsinclude = function( objectLibPath ){
+      return library.GetObject( objectLibPath );
+    }
+    GLOBAL.library = this._serverLibrary;
   }
   
 }

@@ -8,7 +8,8 @@ import { DynamicLoader } from "./DynamicLoader.es.js";
 
 export class HostManager{
   constructor( settings ) {
-    this.hasShared = false; 
+    this.hasShared = false;
+    this._service = settigns.service;
     this._hosts = {};
     this._server = settings.webServer;
     this._coreLibrary = settings.serverLibrary;
@@ -27,11 +28,11 @@ export class HostManager{
   }
   
   _RebuildBaseHost( libObject ){
-    let hostLib = this._coreLibrary.GetPathListener( "Hosts/" );
-    this._coreLibrary.AddPathListener( "Hosts/", "Host", null, this._AddHostListener.bind( this ), 1 );
+    let hostLib = this._coreLibrary.GetPathListener( this._service.path + "Hosts/" );
+    this._coreLibrary.AddPathListener( this._service.path + "Hosts/", "Host", null, this._AddHostListener.bind( this ), 3 );
     if( hostLib !== null ){
       for( let host in hostLib.libs ){
-        this._coreLibrary.ForceRecompile( "Hosts/", host );
+        this._coreLibrary.ForceRecompile( this._service.path + "Hosts/", host );
       }
     }
   }

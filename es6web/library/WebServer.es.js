@@ -21,17 +21,17 @@ export class WebServer{
   _StartServer(){
     this._webServer.on( "request",  this._CompileRequest.bind( this ) );
     
-    let hostManager = this._serverLibrary.AddLib(
-      "HostManager",
+    let serviceManager = this._serverLibrary.AddLib(
+      "ServiceManager",
       { webServer : this, serverLibrary : this._serverLibrary },
       "webserver",
       ( libObject ) => {
         this._hosts = libObject;
-        console.log( "Host manager loaded." );
+        console.log( "Service manager loaded." );
       }
     );
-    if( hostManager !== null ){
-      this._hosts = hostManager;
+    if( serviceManager !== null ){
+      this._services = hostManager;
     }
     
     let routeObject = this._serverLibrary.AddLib( 
@@ -95,8 +95,8 @@ export class WebServer{
     return this._router.uncompiled;
   }
   
-  get hosts(){
-    return this._hosts.compiled;
+  get services(){
+    return this._services.compiled;
   }
   
   get contentBuffer(){
@@ -144,7 +144,7 @@ export class WebServer{
   
   _DoRequest( request, response ){
     this._GenerateCookies( request );
-    let host = this.hosts.GetHost( request );
+    let host = this.services.GetHost( request );
     let router = new this.router( host, request );
     let contentBuffer = new this.contentBuffer( this, host, router, response, this._config );
   }

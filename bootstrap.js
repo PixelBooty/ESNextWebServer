@@ -3,10 +3,12 @@
  * This is only needed until ecma 6 becomes standard.
  */
 var traceur = require( "traceur" );
+var requireOld = require;
 traceur.require.makeDefault(function(filename) {
   // Change this to something more meaningful.
   return filename.endsWith('.es.js');
 });
+
 traceur.options.experimental = true;
 traceur.options.blockBinding = true;
 traceur.options.strictSemicolons = true;

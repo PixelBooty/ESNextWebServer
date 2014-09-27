@@ -315,6 +315,10 @@ export class DynamicLoader{
    * @param string ext - What should file file ext be, * for all ext.
    */
   _DoWatchPath( orgPath, path, subDirDepth, directoryChange, allPaths, ext ){
+    //TODO Make this async.
+    if( !fs.existsSync( path ) ){
+      fs.mkdirSync( path );
+    }
     fs.watch( path, ( event, fileName ) => {
       let libPath = path.replace( this._path, "" ) + fileName.replace( ext, "" );
       fs.exists( path + fileName, ( exists ) => {
@@ -543,13 +547,21 @@ export class DynamicLoader{
       
     }
     catch( ex ){
-      console.log( "Caught parse error with library, revering to old one." );
+      console.log( "Caught parse error with library, revering to old one. Lib: " + filePath );
       console.log( ex );
       require.cache[filePath] = oldCache;
       return null;
     }
   }
   
+  GetObject( objectLibPath ){
+    var objectLib = this.GetLib( objectLibPath );
+    if( objectLib !== null && objectLib.uncompiled !== undefined ){
+      return objectLib.uncompiled;
+    }
+    console.log( "Object get path " + objectLibPath + " not found or a uncompiled version was no stored in the cache." );
+    return null;
+  }
   //_RemoveWatchPath( path ){
     
   //}

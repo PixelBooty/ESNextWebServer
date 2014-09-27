@@ -19,6 +19,7 @@ export class HostBase{
     }
     this._modualDirectory = "";
     this._sharedHost = false;
+    console.log( hostDirectory );
     if( hostDirectory === "Hosts/shared" ){
       this._sharedHost = true;
     }
