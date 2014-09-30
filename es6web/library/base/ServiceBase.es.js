@@ -21,6 +21,10 @@ export class ServiceBase{
     console.log( "Service added " + path );
   }
 
+  get path(){
+    return process.cwd() + "/" + this._path;
+  }
+
   _InitHosts(){
     let hostBase = this._coreLibrary.AddLib( "base/HostBase", null, "hostbuild", this._RebuildBaseHost.bind( this ) );
     if( hostBase !== null ){
