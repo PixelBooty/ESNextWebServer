@@ -8,9 +8,9 @@ let ejs = require( "ejs" );
 import { DynamicLoader } from "../DynamicLoader.es.js";
 
 export class ModuleBase{
-  constructor( host, server, coreLibrary, moduleDirectory ){
-    this._server = server;
+  constructor( host, service, coreLibrary, moduleDirectory ){
     this._host = host;
+    this._service = service;
     this._hostManager = this._host.manager;
     this._coreLibrary = coreLibrary;
     this._controllers = {};
@@ -32,8 +32,8 @@ export class ModuleBase{
     this._InitViews();
   }
   
-  get hostManager(){
-    return this._hostManager;
+  get service(){
+    return this._service;
   }
   
   get host(){
@@ -165,7 +165,7 @@ export class ModuleBase{
     }
     else{
       //Method not found 404//
-      error = { code : "404" };
+      error = { code : "404", requestUri : router };
     }
     
     if( error === null ){
@@ -207,8 +207,8 @@ export class ModuleBase{
       view = this._host.GetModule( "shared" ).GetViewByType( viewName, viewType );
     }
     //Try to get from shared/shared/views
-    if( searchSharedHost && view === null && this._moduleName !== "Shared" && this._host.manager.PullHost( "shared" ) !== null && this._host.manager.PullHost( "shared" ).GetModule( "shared" ) !== null ){
-      view = this._host.manager.PullHost( "shared" ).GetModule( "shared" ).GetViewByType( viewName, viewType );
+    if( searchSharedHost && view === null && this._moduleName !== "Shared" && this._host.service.PullHost( "shared" ) !== null && this._host.service.PullHost( "shared" ).GetModule( "shared" ) !== null ){
+      view = this._host.service.PullHost( "shared" ).GetModule( "shared" ).GetViewByType( viewName, viewType );
     }
     
     return view;
@@ -238,7 +238,7 @@ export class ModuleBase{
   
   _AddModelListener( pathObject, libObject ){
     let modelPath = libObject.path.replace( this._modelDirectory, "" ).replace( ".es.js", "" ).toLowerCase();
-    this._models[modelPath] = new libObject.uncompiled( this._server.database, this );
+    this._models[modelPath] = new libObject.uncompiled( this._service.database, this );
   }
   
   _InitViews(){

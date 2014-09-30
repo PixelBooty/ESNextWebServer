@@ -418,16 +418,19 @@ export class DynamicLoader{
    * @param function callback - 
    */
   _GetHash( path, callback ){
-    let fd = fs.createReadStream( path );
     let hash = crypto.createHash('sha1');
     hash.setEncoding('hex');
-
-    fd.on('end', function() {
-      hash.end();
-      callback( hash.read() );
-    });
-
-    fd.pipe( hash );
+    fs.readFile( path, ( error, data ) => {
+      if( !error ){
+        hash.write( data );
+        hash.end();
+        callback( hash.read() );
+      }
+      else{
+        console.log( "Hash error with " + path );
+      }
+    } );
+    
   }
   
   /**
@@ -467,7 +470,7 @@ export class DynamicLoader{
       libPathObjectName = fullFileName.split( "/" )[fullFileName.split( "/" ).length - 1].replace( libPathObject.ext, "" );
     }
     this._GetHash( filePath, ( hash ) => {
-      if( forcedRecompile || this._pathHashs[libPath] != hash ){
+      if( forcedRecompile || this._pathHashs[filePath] != hash ){
         //Reload the library.
         if( libPathObject.rebuildSettings !== null ){
           let libCompiledObject = null;
@@ -506,7 +509,7 @@ export class DynamicLoader{
             });
           }
         }
-        this._pathHashs[libPath] = hash;
+        this._pathHashs[filePath] = hash;
       }
     });
     //;

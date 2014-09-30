@@ -27,6 +27,17 @@ export class ServiceManager{
     }
   }
 
+  GetHost( request ){
+    for( var service in this._services ){
+      var host = this._services[service].GetHost( request );
+      if( host !== null ){
+        return host;
+      }
+    }
+
+    return null;
+  }
+
   _AddService( path, serviceObject ){
     this._services[path] = serviceObject;
   }

@@ -8,9 +8,15 @@ import { DynamicLoader } from "../DynamicLoader.es.js";
 let fs = require( "fs" );
 
 export class HostBase{
-  constructor( hostManager, server, coreLibrary, hostDirectory ) {
+  constructor( service, server, coreLibrary, hostDirectory ) {
+    this._config = {};
+    this._envConfig = {
+      "production" : {},
+      "staging" : {},
+      "development" : {}
+    };
     this._server = server;
-    this._hostManager = hostManager;
+    this._service = service;
     this._allowedHosts = [];
     this._modules = {};
     this._fileIndex = {
@@ -19,8 +25,7 @@ export class HostBase{
     }
     this._modualDirectory = "";
     this._sharedHost = false;
-    console.log( hostDirectory );
-    if( hostDirectory === "Hosts/shared" ){
+    if( hostDirectory.indexOf( "shared" ) !== -1 ){
       this._sharedHost = true;
     }
     this._hostDirectory = hostDirectory;
@@ -30,8 +35,8 @@ export class HostBase{
     this._InitFileIndex();
   }
   
-  get manager(){
-    return this._hostManager;
+  get service(){
+    return this._service;
   }
   
   get assetDirectory(){
@@ -39,6 +44,19 @@ export class HostBase{
   }
   
   SetupHost(){}
+  
+  GenerateConfig( request ){
+    let config = {};
+    for( var setting in this._config ){
+      config[setting] = this._config[setting];
+    }
+
+    //Env config
+    for( var setting in this._envConfig[request.env] ){
+      config[setting] = this._envConfig[request.env][setting];
+    }
+    return config;                    
+  }
   
   _InitModules(){
     this._modualDirectory = this._hostDirectory + "/Modules/";
@@ -49,7 +67,7 @@ export class HostBase{
   }
   
   _AddModuleListener( path, libObject ){
-    this._AddModule( libObject.path, new libObject.uncompiled( this, this._server, this._coreLibrary, libObject.path.replace( "/Module.es.js", "" ) ) );
+    this._AddModule( libObject.path, new libObject.uncompiled( this, this._service, this._coreLibrary, libObject.path.replace( "/Module.es.js", "" ) ) );
   }
   
   _RebuildModuleBase( libObject ){
@@ -152,9 +170,9 @@ export class HostBase{
   
   GetFile( fileName ){
     if( !this._sharedHost ){
-      var sharedHost = this._hostManager.PullHost( "shared" );
+      var sharedHost = this._service.PullHost( "shared" );
       if( sharedHost ){
-        let sharedFile = this._hostManager.PullHost( "shared" ).GetFile( fileName );
+        let sharedFile = this._service.PullHost( "shared" ).GetFile( fileName );
         if( sharedFile !== null ){
           return sharedFile;
         }

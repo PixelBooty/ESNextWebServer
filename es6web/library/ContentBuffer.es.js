@@ -10,10 +10,11 @@ let fs = require( "fs" );
 let less = require( "less" );
 
 export class ContentBuffer{
-  constructor( webserver, host, router, response, serverConfig ) {
+  constructor( webserver, service, host, router, response, serviceConfig ) {
     this._server = webserver;
     this.host = host;
     this.router = router;
+    this.service = service;
     this.response = response;
     this.header = new Header( 200, "text/html" );
     this._controller = null;
@@ -55,7 +56,7 @@ export class ContentBuffer{
       
       this.module.BindEvents( this );
       this._controller = new this.router.controller( this.module, this.router, this );
-      this._viewHelper = new ViewHelper( this.module, this._controller, this, serverConfig );
+      this._viewHelper = new ViewHelper( this.module, this._controller, this, serviceConfig );
       let timeout = this.module.timeout || 1000;
       this._viewControlTimeout = setTimeout( this._ViewControlTimeoutMethod.bind( this ), timeout );
       this._controller.InitControl( this, this._viewHelper );

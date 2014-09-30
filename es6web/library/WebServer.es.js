@@ -26,7 +26,7 @@ export class WebServer{
       { webServer : this, serverLibrary : this._serverLibrary },
       "webserver",
       ( libObject ) => {
-        this._hosts = libObject;
+        this._services = libObject;
         console.log( "Service manager loaded." );
       }
     );
@@ -145,8 +145,10 @@ export class WebServer{
   _DoRequest( request, response ){
     this._GenerateCookies( request );
     let host = this.services.GetHost( request );
+    let service = host.service;
     let router = new this.router( host, request );
-    let contentBuffer = new this.contentBuffer( this, host, router, response, this._config );
+    let config = service.GenerateConfig( host, request, this._config );
+    let contentBuffer = new this.contentBuffer( this, service, host, router, response, config );
   }
   
   _GenerateCookies( request ){

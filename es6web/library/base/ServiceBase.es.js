@@ -4,6 +4,12 @@ let fs = require( "fs" );
 
 export class ServiceBase{
   constructor( serviceManager, server, coreLibrary, path ){
+    this._envConfig = {
+      "production" : {},
+      "staging" : {},
+      "development" : {},
+    };
+    this._config = {};
     this._serviceManager = serviceManager;
     this._server = server;
     this._coreLibrary = coreLibrary;
@@ -11,6 +17,7 @@ export class ServiceBase{
     this._path = path;
     this._hosts = {};
     this._InitHosts();
+    this._SetupService();
     console.log( "Service added " + path );
   }
 
@@ -47,6 +54,51 @@ export class ServiceBase{
         return  this._Connect( request, hostObject );
       }
     }
+
+    return null;
+  }
+  
+  Setting( name, val = null, env = null ){
+    if( val === "development" || val === "staging" || val === "production" ){
+      env = val;
+      val = null;
+    }
+    if( val !== null ){
+      if( env === null ){
+        this._config[name] = val;
+      }
+      else{
+        this._envConfig[env][name] = val;
+      }
+    }
+
+    if( env === null ){
+      return this._config[name];
+    }
+    else{
+      return this._envConfig[env][name];
+    }
+
+  }
+
+  GenerateConfig( host, request, serverConfig ){
+    let config = {};
+    let hostConfig = host.GenerateConfig( request );
+    for( var setting in serverConfig ){
+      config[setting] = serverConfig[setting];
+    }
+    for( var setting in hostConfig ){
+      config[setting] = hostConfig[setting];
+    }
+    for( var setting in this._config ){
+      config[setting] = this._config[setting];
+    }
+
+    //Env config
+    for( var setting in this._envConfig[request.env] ){
+      config[setting] = this._envConfig[request.env][setting];
+    }
+    return config;
   }
 
   _Connect( request, hostObject ){
@@ -56,10 +108,11 @@ export class ServiceBase{
   }
 
   _AddHost( path, hostObject ){
-    console.log( "Added host " + path );
-    this._hosts[path] = hostObject;
+    var name = path.split( "/" ).pop();
+    console.log( "Added host " + name );
+    this._hosts[name] = hostObject;
   }
 
 
-  SetupService(){}
+  _SetupService(){}
 }
