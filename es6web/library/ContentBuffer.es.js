@@ -69,6 +69,10 @@ export class ContentBuffer{
   get controller(){
     return this._controller;
   }
+
+  get output(){
+    return this._content;
+  }
   
   Redirect( location ){
     clearTimeout( this._viewControlTimeout );
@@ -77,9 +81,9 @@ export class ContentBuffer{
     this.response.end();
   }
   
-  Render(){
+  Render( renderTemplate = false ){
     clearTimeout( this._viewControlTimeout );
-    if( this._content === "" ){
+    if( this._content === "" || renderTemplate === true ){
       this._content = this._viewHelper.Render();
     }
     this._ShowContent();

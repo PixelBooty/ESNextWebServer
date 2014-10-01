@@ -90,7 +90,7 @@ export class ModuleBase{
   }
   
   GetMethod( controllerName, actionName ){
-    
+    actionName = actionName.toLowerCase();
     let methodMap = this._methodMap[controllerName];
     if( methodMap[actionName + "view"] ){
       return methodMap[actionName + "view"];
@@ -155,7 +155,12 @@ export class ModuleBase{
             controller.SetViewTemplate( this._views["views"][defaultView] );
           }
           else{
-            error = { code : "404" };
+            if( controller.errorAction !== undefined ){
+              methodName = this.GetMethod( controllerName, controller.errorAction );
+            }
+            else{
+              error = { code : "404" };
+            }
           }
         }
       }

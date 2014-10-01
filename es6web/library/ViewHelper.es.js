@@ -25,29 +25,38 @@ export class ViewHelper{
   }
   
   Render( ){
+    this._viewBag.require = this._RenderPartial.bind( this );
+    this._viewBag.controller = this.controller;
+    this._viewBag.buffer = this.contentBuffer;
+    this._viewBag.module = this.module;
+    this._viewBag.get = this.buffer.router.get;
+    this._viewBag.post = this.buffer.router.post;
+    this._viewBag.connection = this.buffer.connection;
+    this._viewBag.isset = this._ViewBagHas.bind( this );
     if( this.controller.view ){
-      this._viewBag.require = this._RenderPartial.bind( this );
-      this._viewBag.controller = this.controller;
-      this._viewBag.buffer = this.contentBuffer;
-      this._viewBag.module = this.module;
-      this._viewBag.get = this.buffer.router.get;
-      this._viewBag.post = this.buffer.router.post;
-      this._viewBag.connection = this.buffer.connection;
-      this._viewBag.isset = this._ViewBagHas.bind( this );
       let view = this.controller.view;
       this._viewContent = view( this._viewBag );
       if( this.controller.layout !== null ){
-        
         this._viewBag.content = this._ShowViewContent.bind( this );
         return this.controller.layout( this._viewBag );
       }
-      
+
       return this._viewContent;
     }
     else{
+
+      if( this.controller.layout ){
+         this._viewBag.content = this._ViewRenderOutputBuffer.bind( this );
+         return this.controller.layout( this._viewBag );
+      }
       return this.controller.output;
     }
   }
+
+  _ViewRenderOutputBuffer(){
+    return this.buffer.output;
+  }
+
   
   _ViewBagHas( variableName ){
     if( this._viewBag[variableName] ){
