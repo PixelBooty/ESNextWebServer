@@ -151,10 +151,20 @@ export class Mongo{
     }
     let selectIndex = {};
     for( let i = 0; i < data.length; i++ ){
-      selectIndex[data[i][valueIndex]] = data[i][textIndex];
+      selectIndex[data[i][textIndex]] = data[i][valueIndex];
+    }
+
+    let indexKeys = [];
+    for( let key in selectIndex ){
+      indexKeys.push( key );
+    }
+    indexKeys.sort();
+    var sortedSelectIndex = {};
+    for( let i = 0; i < indexKeys.length; i++ ){
+      sortedSelectIndex[selectIndex[indexKeys[i]]] = indexKeys[i];
     }
     
-    return selectIndex;
+    return sortedSelectIndex;
   }
   
 }
