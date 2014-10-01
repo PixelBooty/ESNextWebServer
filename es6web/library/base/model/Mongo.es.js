@@ -53,12 +53,20 @@ export class Mongo{
     }
     
     for( let type in this._forceTypes ){
-      if( insertData[type] ){
+      if( insertData[type] !== undefined ){
         if( this._forceTypes[type] === "number" ){
           insertData[type] = this._ChangeDataType( "number", insertData[type] );
         }
         else if( this._forceTypes[type].StartsWith( "array" ) ){
-          insertData[type] = [ this._ChangeDataType( this._forceTypes[type].split( ":" )[1], insertData[type] ) ];
+          var preData = insertData[type];
+          if( typeof( preData )  === "string" ){
+            preData = [ preData ];
+          }
+          var dataSet = [];
+          for( let di = 0; di < preData.length; di++ ){
+            dataSet.push( this._ChangeDataType( this._forceTypes[type].split( ":" )[1], preData[di] ) );
+          }
+          insertData[type] = dataSet;
         }
       }
     }
@@ -100,12 +108,20 @@ export class Mongo{
     }
     
     for( let type in this._forceTypes ){
-      if( data['$set'][type] ){
+      if( data['$set'][type] !== undefined ){
         if( this._forceTypes[type] === "number" ){
           data['$set'][type] = this._ChangeDataType( "number", data['$set'][type] );
         }
         else if( this._forceTypes[type].StartsWith( "array" ) ){
-          data['$set'][type] = [ this._ChangeDataType( this._forceTypes[type].split( ":" )[1], data['$set'][type] ) ];
+          var preData = data['$set'][type];
+          if( typeof( preData )  === "string" ){
+            preData = [ preData ];
+          }
+          var dataSet = [];
+          for( let di = 0; di < preData.length; di++ ){
+            dataSet.push( this._ChangeDataType( this._forceTypes[type].split( ":" )[1], preData[di] ) );
+          }
+          data['$set'][type] = dataSet;
         }
       }
     }

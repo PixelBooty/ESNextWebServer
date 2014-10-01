@@ -124,7 +124,12 @@ export class WebServer{
         else{
           request.post = {};
           for( let field in fields ){
-            request.post[field] = fields[field][0];
+            if( fields[field].length === 1 ){
+              request.post[field] = fields[field][0];
+            }
+            else {
+              request.post[field] = fields[field];
+            }
           }
           for( let file in files ){
             if( files[file][0].size > 0 ){
