@@ -33,9 +33,13 @@ export class Mongo{
   
   _GenerateIndexes(){
     for( let imap = 0; imap < this._indexMaps.length; imap++ ){
-      this._indexes[this._indexMaps[imap]] = {};
+      var indexName = this._indexMaps[imap];
+      if( indexName[0] === "~" ){
+        indexName = indexName.substring( 1 );
+      }
+      this._indexes[indexName] = {};
       for( let cdata = 0; cdata < this._data.length; cdata++ ){
-        this._indexes[this._indexMaps[imap]][this._data[cdata][this._indexMaps[imap]]] = this._data[cdata];
+        this._indexes[indexName][this._data[cdata][indexName]] = this._data[cdata];
       }
     }
     this._PostIndex();
@@ -47,7 +51,7 @@ export class Mongo{
   
   Insert( insertData, callback ){
     for( let i = 0; i < this._indexMaps.length; i++ ){
-      if( insertData[this._indexMaps[i]] ){
+      if( this._indexMaps[i][0] !== "~" &&  insertData[this._indexMaps[i]] ){
         insertData[this._indexMaps[i]] = this._ChangeDataType( "index", insertData[this._indexMaps[i]] );
       }
     }
@@ -102,7 +106,7 @@ export class Mongo{
       delete data["_id"];
     }
     for( let i = 0; i < this._indexMaps.length; i++ ){
-      if( data['$set'][this._indexMaps[i]] ){
+      if( this._indexMaps[i][0] !== "~" &&  data['$set'][this._indexMaps[i]] ){
         data['$set'][this._indexMaps[i]] = this._ChangeDataType( "index", data['$set'][this._indexMaps[i]] );
       }
     }

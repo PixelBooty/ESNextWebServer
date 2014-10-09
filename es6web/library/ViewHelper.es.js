@@ -20,7 +20,8 @@ export class ViewHelper{
       host : request.headers.host,
       uri : request.url,
       request : ( ( request.ssl ) ? "https://" : "http://" ) + request.headers.host + request.url,
-      config : serverConfig
+      config : serverConfig,
+      env : request.env
     };
   }
   

@@ -150,10 +150,15 @@ export class WebServer{
   _DoRequest( request, response ){
     this._GenerateCookies( request );
     let host = this.services.GetHost( request );
-    let service = host.service;
-    let router = new this.router( host, request );
-    let config = service.GenerateConfig( host, request, this._config );
-    let contentBuffer = new this.contentBuffer( this, service, host, router, response, config );
+    if( host !== null ){
+      let service = host.service;
+      let router = new this.router( host, request );
+      let config = service.GenerateConfig( host, request, this._config );
+      let contentBuffer = new this.contentBuffer( this, service, host, router, response, config );
+    }
+    else{
+      response.end( "Requested host does not exist on this server, Error: 504." );
+    }
   }
   
   _GenerateCookies( request ){
