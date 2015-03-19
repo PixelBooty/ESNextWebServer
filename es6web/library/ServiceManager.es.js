@@ -1,11 +1,30 @@
+let fs = require( "fs" );
+
 export class ServiceManager{
   constructor( settings ){
     this._services = {};
     this._server = settings.webServer;
     this._coreLibrary = settings.serverLibrary;
+    //this._PreLoadServices();
     this._InitServiceBase();
   }
 
+  /*_PreLoadServices(){
+    //Check for service links//
+    let services = fs.readdirSync( "Services" );
+    for( let i = 0; i < services.length; i++ ){
+      if( services[i].indexOf( ".service" ) !== -1 ){
+        let serviceName = services[i].substring( 0, services[i].indexOf( ".service" ) );
+        let linkTo = fs.readFileSync( "Services/" + services[i] ).toString();
+        if( fs.existsSync( "Services/" + serviceName ) ){
+          fs.unlinkSync( "Services/" + serviceName );
+        }
+        console.log( linkTo );
+        fs.linkSync( linkTo, "Services/" + serviceName );
+      }
+    }
+  }*/
+  
   _InitServiceBase(){
     let serviceBase = this._coreLibrary.AddLib( "base/ServiceBase", null, "servicebase", this._RebuildBaseService.bind( this ) );
     if( this._hostManager !== null ){
