@@ -35,7 +35,7 @@ export class DynamicLoader{
   
   /**
    * Adds a lib watcher into the current library path for the loader.
-   * @param string libPath - Path of the lib relitive to this._path.
+   * @param string libPath - Path of the lib relative to this._path.
    * @param object rebuildSettings - What params should be passed to lib when compiled.
    * @param function postBuildMethod - Method to call once lib is rebuilt.
    * @returns object - The lib if it was added before, or null.

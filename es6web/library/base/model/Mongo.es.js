@@ -58,10 +58,7 @@ export class Mongo{
     
     for( let type in this._forceTypes ){
       if( insertData[type] !== undefined ){
-        if( this._forceTypes[type] === "number" ){
-          insertData[type] = this._ChangeDataType( "number", insertData[type] );
-        }
-        else if( this._forceTypes[type].StartsWith( "array" ) ){
+        if( this._forceTypes[type].StartsWith( "array" ) ){
           var preData = insertData[type];
           if( typeof( preData )  === "string" ){
             preData = [ preData ];
@@ -71,6 +68,9 @@ export class Mongo{
             dataSet.push( this._ChangeDataType( this._forceTypes[type].split( ":" )[1], preData[di] ) );
           }
           insertData[type] = dataSet;
+        }
+        else{
+          insertData[type] = this._ChangeDataType( this._forceTypes[type], insertData[type] );
         }
       }
     }
@@ -106,17 +106,13 @@ export class Mongo{
       delete data["_id"];
     }
     for( let i = 0; i < this._indexMaps.length; i++ ){
-      if( this._indexMaps[i][0] !== "~" &&  data['$set'][this._indexMaps[i]] ){
+      if( this._indexMaps[i][0] !== "~" && data['$set'] !== undefined && data['$set'][this._indexMaps[i]] ){
         data['$set'][this._indexMaps[i]] = this._ChangeDataType( "index", data['$set'][this._indexMaps[i]] );
       }
     }
-    
     for( let type in this._forceTypes ){
-      if( data['$set'][type] !== undefined ){
-        if( this._forceTypes[type] === "number" ){
-          data['$set'][type] = this._ChangeDataType( "number", data['$set'][type] );
-        }
-        else if( this._forceTypes[type].StartsWith( "array" ) ){
+      if( data['$set'] !== undefined && data['$set'][type] !== undefined ){
+        if( this._forceTypes[type].StartsWith( "array" ) ){
           var preData = data['$set'][type];
           if( typeof( preData )  === "string" ){
             preData = [ preData ];
@@ -127,9 +123,11 @@ export class Mongo{
           }
           data['$set'][type] = dataSet;
         }
+        else{
+          data['$set'][type] = this._ChangeDataType( this._forceTypes[type], data['$set'][type] );
+        }
       }
     }
-    
     this._collection.update( whereClause, data, ( error ) => {
       this.CreateDBIndex( () => {
         callback( error );

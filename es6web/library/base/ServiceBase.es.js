@@ -9,6 +9,7 @@ export class ServiceBase{
       "staging" : {},
       "development" : {},
     };
+    this._serviceLibrary = new DynamicLoader( path + "/library/" );
     this._config = {};
     this._serviceManager = serviceManager;
     this._server = server;
@@ -18,11 +19,16 @@ export class ServiceBase{
     this._hosts = {};
     this._InitHosts();
     this._SetupService();
-    console.log( "Service added " + path );
+    console.log( "Service added " + path ); 
   }
 
   get path(){
     return process.cwd() + "/" + this._path;
+  }
+  
+  _ReloadService(){
+    //this._serviceManager._RebuildBaseService();
+    this._coreLibrary.ForceRecompile( "Services/", this._path + "/Service.es.js" );
   }
 
   _InitHosts(){
@@ -37,6 +43,9 @@ export class ServiceBase{
     this._coreLibrary.AddPathListener( this._serviceHostPath, "Host", null, this._AddHostListener.bind( this ), 1 );
     if( hostLib !== null ){
       for( let host in hostLib.libs ){
+        console.log( this._serviceHostPath );
+        console.log( host );
+        console.log( this._path );
         this._coreLibrary.ForceRecompile( this._serviceHostPath, host );
       }
     }
