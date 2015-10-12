@@ -169,16 +169,37 @@ export class HostBase{
   }
   
   GetFile( fileName ){
-    if( !this._sharedHost ){
-      var sharedHost = this._service.PullHost( "shared" );
-      if( sharedHost ){
-        let sharedFile = this._service.PullHost( "shared" ).GetFile( fileName );
-        if( sharedFile !== null ){
-          return sharedFile;
+    if( fileName == "" ) {
+      return null;
+    }
+    if( this._fileIndex.files[this._assetDirectory.toLowerCase() + fileName] !== undefined ) {
+      return this._fileIndex.files[this._assetDirectory.toLowerCase() + fileName] || null;
+    }
+    else {
+      if (!this._sharedHost) {
+        let sharedHost = this._service.PullHost("shared");
+        if (sharedHost) {
+          let sharedFile = this._service.PullHost("shared").GetFile(fileName);
+          if (sharedFile !== null) {
+            return sharedFile;
+          }
+          else {
+            let sharedService = this._service.manager.GetSharedService();
+            if( sharedService != null ) {
+              let sharedServiceHost = sharedService.PullHost("shared");
+              if( sharedServiceHost ) {
+                sharedFile = sharedServiceHost.GetFile(fileName);
+              }
+              if (sharedFile !== null) {
+                return sharedFile;
+              }
+            }
+          }
         }
       }
     }
-    return this._fileIndex.files[this._assetDirectory.toLowerCase() + fileName] || null;
+    
+    return null;
   }
   
 }

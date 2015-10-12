@@ -89,8 +89,11 @@ export class ModuleBase{
     return this._models[modelName.toLowerCase()] || null;
   }
   
-  GetMethod( controllerName, actionName ){
-    actionName = actionName.toLowerCase();
+  GetMethod(controllerName, actionName) {
+    if( actionName === null ) {
+      return null;
+    }
+    actionName = actionName.toLowerCase().replace( /-/g, "" );
     let methodMap = this._methodMap[controllerName];
     if( methodMap[actionName + "view"] ){
       return methodMap[actionName + "view"];
@@ -121,7 +124,6 @@ export class ModuleBase{
       
     }
     else{
-      
       if( defaultActionView !== null && ( methodName = this.GetMethod( controllerName, defaultActionView ) ) ){
       }
       else if( methodName = this.GetMethod( controllerName, defaultAction ) ){
@@ -132,7 +134,6 @@ export class ModuleBase{
         console.log( "No action found for controller." );
       }
     }
-    
     let error = null;
     if( methodName !== null ){
       controller.SetLayoutTemplate( this.GetLayout( controller.defaultLayout || this._defaultLayout ) );
@@ -191,8 +192,8 @@ export class ModuleBase{
     return this.GetViewByType( layoutName, "layouts" );
   }
   
-  GetPartial( partialName, searchSharedHost = true, searchHostSharedModule = true, searchLocalModule = true ){
-    return this.GetViewByType( partialName.toLowerCase(), "partials", searchSharedHost, searchHostSharedModule, searchLocalModule );
+  GetPartial( partialName, searchSharedService = true, searchSharedHost = true, searchHostSharedModule = true, searchLocalModule = true, moduleRef = {} ){
+    return this.GetViewByType( partialName.toLowerCase(), "partials", searchSharedService, searchSharedHost, searchHostSharedModule, searchLocalModule, moduleRef );
   }
   
   GetView( viewName ){
@@ -201,19 +202,37 @@ export class ModuleBase{
     return view;
   }
   
-  GetViewByType( viewName, viewType, searchSharedHost = true, searchHostSharedModule = true, searchLocalModule = true ){
+  GetViewByType( viewName, viewType, searchSharedService = true, searchSharedHost = true, searchHostSharedModule = true, searchLocalModule = true, moduleRef = {} ){
     //try to get layout for this module.
     let view = null;
     if( searchLocalModule ){
       view = this._views[viewType][viewName] || null;
+      if( view !== null ) {
+        moduleRef.ref = this;
+      }
     }
     //Try to get module shared
-    if( searchHostSharedModule && view === null && this._moduleName !== "Shared" && this._host.GetModule( "shared" ) !== null ){
-      view = this._host.GetModule( "shared" ).GetViewByType( viewName, viewType );
+    if (searchHostSharedModule && view === null && this._moduleName !== "Shared" && this._host.GetModule("shared") !== null) {
+      view = this._host.GetModule("shared").GetViewByType(viewName, viewType);
+      if( view !== null ) {
+        moduleRef.ref = this._host.GetModule("shared");
+      }
     }
     //Try to get from shared/shared/views
     if( searchSharedHost && view === null && this._moduleName !== "Shared" && this._host.service.PullHost( "shared" ) !== null && this._host.service.PullHost( "shared" ).GetModule( "shared" ) !== null ){
-      view = this._host.service.PullHost( "shared" ).GetModule( "shared" ).GetViewByType( viewName, viewType );
+      view = this._host.service.PullHost("shared").GetModule("shared").GetViewByType(viewName, viewType);
+      if( view !== null ) {
+        moduleRef.ref = this._host.service.PullHost("shared").GetModule("shared");
+      }
+    }
+    
+    if( searchSharedService && view === null && this._host.service.manager.GetSharedService() !== null
+     && this._host.service !== this._host.service.manager.GetSharedService() && this._host.service.manager.GetSharedService().PullHost("shared") !== null 
+     && this._host.service.manager.GetSharedService().PullHost("shared").GetModule("shared") !== null) {
+      view = this._host.service.manager.GetSharedService().PullHost("shared").GetModule("shared").GetViewByType(viewName, viewType);
+      if( view !== null ) {
+        moduleRef.ref = this._host.service.manager.GetSharedService().PullHost("shared").GetModule("shared");
+      }
     }
     
     return view;
@@ -225,10 +244,14 @@ export class ModuleBase{
   
   _InitModels(){
     this._modelDirectory = this._moduleDirectory + "/Models/";
-    let modelBase = this._coreLibrary.AddLib( "base/model/Mongo", null, this._modelDirectory, this._RebuildModelBase.bind( this ) );
-    if( modelBase !== null ){
-      this._RebuildModelBase();
+    for ( let database in this._service.databases ) {
+      let lib = this._service.databases[database].lib || this._coreLibrary;
+      let modelBase = lib.AddLib( "base/model/" + this._service.databases[database].base, null, this._modelDirectory + database + "/", this._RebuildModelBase.bind( this ) );
+      if( modelBase !== null ){
+        this._RebuildModelBase();
+      }
     }
+    
   }
   
   _RebuildModelBase( libObject ){
@@ -242,14 +265,16 @@ export class ModuleBase{
   }
   
   _AddModelListener( pathObject, libObject ){
-    let modelPath = libObject.path.replace( this._modelDirectory, "" ).replace( ".es.js", "" ).toLowerCase();
-    this._models[modelPath] = new libObject.uncompiled( this._service.database, this );
+    let modelPath = libObject.path.replace(this._modelDirectory, "").replace(".es.js", "");
+    let database = modelPath.split("/")[0];
+    modelPath = modelPath.split("/")[1].toLowerCase();
+    this._models[modelPath] = new libObject.uncompiled( this._service.databases[database].db, this );
   }
   
   _InitViews(){
     this._viewDirectory = this._moduleDirectory + "/Views/";
     let viewLib = this._coreLibrary.GetPathListener( this._viewDirectory );
-    this._coreLibrary.AddPathListener( this._viewDirectory, "*", null, this._AddViewListener.bind( this ), -1, false, ".js.html" );
+    this._coreLibrary.AddPathListener( this._viewDirectory, "*", null, this._AddViewListener.bind( this ), -1, false, "*" );
     if( viewLib !== null ){
       for( let view in viewLib.libs ){
         this._coreLibrary.ForceRecompile( this._viewDirectory, view );
@@ -260,8 +285,14 @@ export class ModuleBase{
   _AddViewListener( pathObject, libObject ){
     let viewName = libObject.path.replace( this._viewDirectory, "" ).replace( ".js.html", "" ).toLowerCase();
     let viewChain = viewName.substr( 0, viewName.indexOf( "/" ) );
-    viewName = viewName.replace( viewChain + "/", "" );
-    this._views[viewChain][viewName] = ejs.compile( libObject.data );
+    viewName = viewName.replace(viewChain + "/", "");
+    //if (libObject.path.EndsWith(".js.html")) {
+    //  console.log(viewName);
+      this._views[viewChain][viewName] = ejs.compile(libObject.data);
+    //}
+    //else {
+    //  this._views[viewChain][viewName] = libObject.data;
+    //}
   }
   
   get defaultRoutes(){

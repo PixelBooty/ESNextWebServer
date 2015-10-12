@@ -115,11 +115,22 @@ export class WebServer{
       request.on( 'end', () => {
         request.post = {};
       });
-      
+
       let form = new multiparty.Form();
       form.parse( request, ( error, fields, files ) => {
         if( error ){
-          request.post = qs.parse( request.postBody );
+          if( request.postBody.startsWith( "{" ) || request.postBody.startsWith( "[" ) ){
+            try{
+              request.post = JSON.parse( request.postBody );
+            }
+            catch( ex ){
+              //This is bad json but we will just ignore the input for now.
+              request.post = qs.parse( request.postBody );
+            }
+          }
+          else{
+            request.post = qs.parse( request.postBody );
+          }
         }
         else{
           request.post = {};

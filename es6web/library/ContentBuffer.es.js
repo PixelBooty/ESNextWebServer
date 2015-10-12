@@ -8,6 +8,7 @@ import { ViewHelper } from "./ViewHelper.es.js";
 
 let fs = require( "fs" );
 let less = require( "less" );
+let htmlMinify = require('html-minifier').minify;
 
 export class ContentBuffer{
   constructor( webserver, service, host, router, response, serviceConfig ) {
@@ -58,11 +59,29 @@ export class ContentBuffer{
       this._controller = new this.router.controller( this.module, this.router, this );
       this._viewHelper = new ViewHelper( this.module, this._controller, this, serviceConfig );
       let timeout = this.module.timeout || 1000;
-      this._viewControlTimeout = setTimeout( this._ViewControlTimeoutMethod.bind( this ), timeout );
-      this._controller.InitControl( this, this._viewHelper );
-      if( !this.response.finished ){
-        this.module.DoAction( this, this._viewHelper );
+      this._viewControlTimeout = setTimeout(this._ViewControlTimeoutMethod.bind(this), timeout);
+      this.RunPage();
+    }
+  }
+
+  async RunPage() {
+    let continueRunning = await this._controller.InitControl(this, this._viewHelper);
+    if( continueRunning !== false && !this.response.finished ) {
+      try {
+        await this.module.DoAction(this, this._viewHelper);
+        if (!this.response.finished) {
+          this.Render();
+        }
       }
+      catch( ex ) {
+        this.header.code = 500;
+        if (this.connection) {
+          this.connection.SetHeader(this.header);
+        }
+        this.header.Write(this.response);
+        this.response.end( "500 Error with page '" + ex.message + "'" );
+      }
+      
     }
   }
   
@@ -83,8 +102,14 @@ export class ContentBuffer{
   
   Render( renderTemplate = false ){
     clearTimeout( this._viewControlTimeout );
+    
     if( this._content === "" || renderTemplate === true ){
-      this._content = this._viewHelper.Render();
+      this._content = htmlMinify(this._viewHelper.Render(), {
+        minifyJS : false,
+        removeComments : true,
+        removeCommentsFromCDATA : true,
+        collapseWhitespace : true
+      });
     }
     this._ShowContent();
   }
@@ -96,8 +121,6 @@ export class ContentBuffer{
   WriteJson( jsonObject ){
     this.Write( JSON.stringify( jsonObject ) );
   }
-  
-  
   
   _ViewControlTimeoutMethod(){
     this._content = "Controller method timed out.";

@@ -6,6 +6,7 @@ export class ViewHelper{
     this.buffer = contentBuffer;
     this._pageTitle = "Webpage";
     this._scripts = [];
+    this._metaData = [];
     this._viewBag = this.controller.viewBag;
     this._breadCrumbs = { "Home" : "/" };
     this._viewContent = "";
@@ -23,9 +24,6 @@ export class ViewHelper{
       config : serverConfig,
       env : request.env
     };
-  }
-  
-  Render( ){
     this._viewBag.require = this._RenderPartial.bind( this );
     this._viewBag.controller = this.controller;
     this._viewBag.buffer = this.contentBuffer;
@@ -34,6 +32,17 @@ export class ViewHelper{
     this._viewBag.post = this.buffer.router.post;
     this._viewBag.connection = this.buffer.connection;
     this._viewBag.isset = this._ViewBagHas.bind( this );
+
+    //Other dule bindings
+    this.require = this._RenderPartial.bind( this );
+    this.meta = this._GenerateMetaData.bind( this );
+    this.script = this._GenerateScriptData.bind( this );
+    this.title = this._GenerateTitle.bind( this );
+    this.server = this._viewBag.server;
+    this.isset = this._ViewBagHas.bind( this );
+  }
+  
+  Render( ){
     if( this.controller.view ){
       let view = this.controller.view;
       this._viewContent = view( this._viewBag );
@@ -67,17 +76,62 @@ export class ViewHelper{
     return false;
   }
   
-  _RenderPartial( partialName, searchSharedHost = true, searchHostSharedModule = true, searchLocalModule = true ){
-    let partial = this.module.GetPartial( partialName, searchSharedHost, searchHostSharedModule, searchLocalModule );
+  _RenderPartial( partialName, viewItems = null, searchLocalModule = true, searchHostSharedModule = true, searchSharedHost = true, searchSharedService = true ){
+    let viewModuleRef = {};
+    let partial = this.module.GetPartial( partialName, searchSharedService, searchSharedHost, searchHostSharedModule, searchLocalModule, viewModuleRef );
     if( partial !== null ){
-      return partial( this._viewBag );
+      let localModule = this.module;
+      this.module = viewModuleRef.ref;
+      this._viewBag.module = viewModuleRef.ref;
+      var viewBackup = {};
+      if( viewItems !== null ) {
+        for( let item in viewItems ) {
+          if( this._viewBag[item] !== undefined ) {
+            viewBackup[item] = this._viewBag[item];
+          }
+          this._viewBag[item] = viewItems[item];
+        }
+      }
+      let phtml = partial( this._viewBag );
+      if( viewItems !== null ) {
+        for( var item in viewItems ) {
+          if( viewBackup[item] !== undefined ) {
+            this._viewBag[item] = viewBackup[item];
+          }
+          else {
+            delete this._viewBag[item];
+          }
+        }
+      }
+      this._viewBag.module = localModule;
+      this.module = localModule;
+      return phtml;
     }
     
     return "Server Error: partial not found " + partialName;
   }
+
+  _CompireAttributeData( attributes ) {
+    let attrs = [];
+    for( let attribute in attributes ){
+      attrs.push( attribute + '="' + attributes[attribute] + '"' );
+    }
+    return attrs.join( " " );
+  }
   
-  _GenerateMetaData( ){
-    return "";
+  _GenerateMetaData( metaData = null ){
+    if( metaData !== null ) {
+      this._metaData.push( metaData );
+    }
+    else {
+      let meta = [];
+      for( let m = 0; m < this._metaData.length; m++ ) {
+        let metaName = this._metaData[m].name || "meta";
+        delete this._metaData[m].name
+        meta.push( "<" + metaName + " " + this._CompireAttributeData( this._metaData[m] ) + "/>" );
+      }
+      return meta.join( "\n" );
+    }
   }
   
   _GenerateScriptData( scriptName = null, scriptAttributes = null ){
@@ -88,11 +142,7 @@ export class ViewHelper{
     else{
       let scripts = [];
       for( let s = 0; s < this._scripts.length; s++ ){
-        let scriptAttr = [];
-        for( let attribute in this._scripts[s] ){
-          scriptAttr.push( attribute + '="' + this._scripts[s][attribute] + '"' );
-        }
-        scripts.push( "<script " + scriptAttr.join( " " ) + "></script>" );
+        scripts.push( "<script " + this._CompireAttributeData( this._scripts[s] ) + "></script>" );
       }
       
       return scripts.join( "\n" );

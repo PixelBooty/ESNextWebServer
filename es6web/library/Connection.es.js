@@ -16,6 +16,6 @@ export class Connection{
   }
   
   SetHeader( header ){
-    header.AddCookie( "es6coid", this._id );
+    header.AddCookie( "es6coid", this._id + "; expires=Session"  );
   }
 }

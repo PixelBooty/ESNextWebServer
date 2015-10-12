@@ -57,6 +57,13 @@ export class ServiceManager{
     return null;
   }
 
+  GetSharedService() {
+    if( this._services["shared"] ) {
+      return this._services["shared"];
+    }
+    return null;
+  }
+
   _AddService( path, serviceObject ){
     this._services[path] = serviceObject;
   }

@@ -9,7 +9,7 @@ export class ServiceBase{
       "staging" : {},
       "development" : {},
     };
-    this._serviceLibrary = new DynamicLoader( path + "/library/" );
+    this._serviceLibrary = new DynamicLoader( path + "/Library/" );
     this._config = {};
     this._serviceManager = serviceManager;
     this._server = server;
@@ -17,9 +17,18 @@ export class ServiceBase{
     this._serviceHostPath = path + "/Hosts/";
     this._path = path;
     this._hosts = {};
-    this._InitHosts();
-    this._SetupService();
+    this._databases = {};
     console.log( "Service added " + path ); 
+    this.InitalizeService();
+  }
+
+  async InitalizeService() {
+    await this._SetupService();
+    this._InitHosts();
+  }
+
+  get manager() {
+  return this._serviceManager;
   }
 
   get path(){
@@ -32,13 +41,14 @@ export class ServiceBase{
   }
 
   _InitHosts(){
-    let hostBase = this._coreLibrary.AddLib( "base/HostBase", null, "hostbuild", this._RebuildBaseHost.bind( this ) );
+    let hostBase = this._coreLibrary.AddLib( "base/HostBase", null, "hostbuild-" + this._path, this._RebuildBaseHost.bind( this ) );
     if( hostBase !== null ){
       this._RebuildBaseHost();
     }
   }
 
   _RebuildBaseHost( libObject ){
+    console.log( "rebuilding host for " + this._serviceHostPath );
     let hostLib = this._coreLibrary.GetPathListener( this._serviceHostPath );
     this._coreLibrary.AddPathListener( this._serviceHostPath, "Host", null, this._AddHostListener.bind( this ), 1 );
     if( hostLib !== null ){
@@ -127,5 +137,5 @@ export class ServiceBase{
   }
 
 
-  _SetupService(){}
+  async _SetupService(){}
 }

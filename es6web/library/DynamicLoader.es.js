@@ -241,10 +241,10 @@ export class DynamicLoader{
           }
           else{
             let objectName = files[fspfItr].replace( ext, "" );
-            if( files[fspfItr].EndsWith( ext ) && this._pathListeners[orgPath].compatiableObjects.length > 0 && this._pathListeners[orgPath].compatiableObjects.indexOf( objectName ) !== -1 ){
+            if( ( files[fspfItr].EndsWith( ext ) || ext === "*" ) && this._pathListeners[orgPath].compatiableObjects.length > 0 && this._pathListeners[orgPath].compatiableObjects.indexOf( objectName ) !== -1 ){
               this._LibPathWatch( "added", path + files[fspfItr], orgPath, depth, ext );
             }
-            else if( files[fspfItr].EndsWith( ext ) && this._pathListeners[orgPath].compatiableObjects.length === 0 ){
+            else if( ( files[fspfItr].EndsWith( ext ) || ext === "*" ) && this._pathListeners[orgPath].compatiableObjects.length === 0 ){
               this._LibPathWatch( "added", path + files[fspfItr], orgPath, depth, ext );
             }
           }
@@ -407,7 +407,7 @@ export class DynamicLoader{
     if( ext === null ){
       ext = this._scriptExt;
     }
-    if( fileName.EndsWith( ext ) ){
+    if( fileName.EndsWith( ext ) || ext === "*" ){
       //Hex check on file if it is one that is watched.//
       this._RecompileLib( path, fileName );
     }

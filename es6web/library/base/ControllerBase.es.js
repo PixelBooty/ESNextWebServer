@@ -49,4 +49,5 @@ export class ControllerBase{
   WriteJson( jsonObject ){
     this.output += JSON.stringify( jsonObject ) + "\n";
   }
+
 }
