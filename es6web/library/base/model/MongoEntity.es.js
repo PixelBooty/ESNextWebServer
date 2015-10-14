@@ -35,7 +35,7 @@
     return new Promise( ( resolve, reject ) => {
       this._db.collection( this._collection ).insert( document, options, ( err, result ) => {
         if( !err ) {
-          resolve( result );
+          resolve( result[0] );
         }
         else {
           reject( err );

@@ -69,6 +69,18 @@ export class WebServer{
     if( contentBuffer !== null ){
       this._contentBuffer = contentBuffer;
     }
+  
+    let postFile = this._serverLibrary.AddLib( 
+      "PostFile",
+      null,
+      "webserver",
+      ( libObject ) => {
+        this._postFile = libObject;
+      }
+    );
+    if( postFile !== null ){
+      this._postFile = postFile;
+    }
     
     this._serverLibrary.AddLib( "ViewHelper", null, "webserver", ( ) => {
       this._serverLibrary.ForceRecompile( "ContentBuffer", __dirname + "/ContentBuffer" );
@@ -135,16 +147,38 @@ export class WebServer{
         else{
           request.post = {};
           for( let field in fields ){
+            let fieldName = field;
+            let requestFieldDepth = request.post;
+            if( field.indexOf( '.' ) !== -1 ){
+              while( fieldName.indexOf( '.') !== -1 ){
+                let depthAddition = fieldName.substring( 0, fieldName.indexOf( '.' ) );
+                if( requestFieldDepth[depthAddition] === undefined ){
+                  requestFieldDepth[depthAddition] = {};  
+                }
+                requestFieldDepth = requestFieldDepth[depthAddition];
+                fieldName = fieldName.substring( depthAddition.length + 1 );
+              }
+            }
             if( fields[field].length === 1 ){
-              request.post[field] = fields[field][0];
+              requestFieldDepth[fieldName] = fields[field][0];
             }
             else {
-              request.post[field] = fields[field];
+              requestFieldDepth[fieldName] = fields[field];
             }
           }
           for( let file in files ){
+            let requestFieldDepth = request.post;
             if( files[file][0].size > 0 ){
-              request.post[file] = files[file][0]; 
+              let fieldName = file;
+              while( fieldName.indexOf( '.') !== -1 ){
+                let depthAddition = fieldName.substring( 0, fieldName.indexOf( '.' ) );
+                if( requestFieldDepth[depthAddition] === undefined ){
+                  requestFieldDepth[depthAddition] = {};  
+                }
+                requestFieldDepth = requestFieldDepth[depthAddition];
+                fieldName = fieldName.substring( depthAddition.length + 1 );
+              }
+              requestFieldDepth[fieldName] = new this._postFile.uncompiled( files[file][0] ); 
             }
           }
         }
