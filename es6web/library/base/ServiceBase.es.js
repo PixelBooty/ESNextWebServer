@@ -18,7 +18,7 @@ export class ServiceBase{
     this._path = path;
     this._hosts = {};
     this._databases = {};
-    console.log( "Service added " + path ); 
+    console.log( "Service added " + path );
     this.InitalizeService();
   }
 
@@ -34,7 +34,7 @@ export class ServiceBase{
   get path(){
     return process.cwd() + "/" + this._path;
   }
-  
+
   _ReloadService(){
     //this._serviceManager._RebuildBaseService();
     this._coreLibrary.ForceRecompile( "Services/", this._path + "/Service.es.js" );
@@ -80,7 +80,7 @@ export class ServiceBase{
 
     return null;
   }
-  
+
   Setting( name, val = null, env = null ){
     if( val === "development" || val === "staging" || val === "production" ){
       env = val;

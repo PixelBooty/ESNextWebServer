@@ -17,6 +17,7 @@ export class ConnectionManager{
       if( request.cookies.es6coid.push ) {
         //TODO check why spoof attempt.... TODOSECURE
         //TODO PRELAUNCH
+        
         for( let i = 0; i < request.cookies.es6coid.length; i++ ) {
           if(this._connectionsIndex[request.cookies.es6coid[i]] ) {
             connection = this._connectionsIndex[request.cookies.es6coid[i]];

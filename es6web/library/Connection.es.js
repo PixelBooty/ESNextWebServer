@@ -8,7 +8,19 @@ let uid = require( "node-uuid" );
 
 export class Connection{
   constructor( request ){
-    this._id = uid.v4();
+    this._sentCookie = false;
+    if( request.cookies.es6coid ) {
+      if( request.cookies.es6coid.push ) {
+        this._id = request.cookies.es6coid[0];
+      }
+      else {
+        this._id = request.cookies.es6coid;
+      }
+      this._sentCookie = true;
+    }
+    else {
+      this._id = uid.v4();
+    }
   }
   
   get id(){
@@ -16,6 +28,10 @@ export class Connection{
   }
   
   SetHeader( header ){
-    header.AddCookie( "es6coid", this._id + "; expires=Session"  );
+    if( !this._sentCookie ) {
+      header.AddCookie( "es6coid", this._id + "; expires=Session; path=/"  );
+      this._sentCookie = true;
+    }
+    
   }
 }

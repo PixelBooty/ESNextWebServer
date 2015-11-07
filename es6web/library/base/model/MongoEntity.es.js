@@ -18,6 +18,19 @@
     });
   }
 
+  Count( selector = {}, options = {} ) {
+    return new Promise( ( resolve, reject ) => {
+      this._db.collection( this._collection ).count( selector, options, ( err, count ) => {
+        if( !err ) {
+          resolve( count );
+        }
+        else {
+          reject( err );
+        }
+      } );
+    } );
+  }
+
   FindOne( selector = null, options = {} ) {
     return new Promise( ( resolve, reject ) => {
       this._db.collection( this._collection ).findOne( selector, options, ( err, result ) => {
