@@ -22,30 +22,37 @@ To do this you must include the following npm packages to your project:
 * babel-polyfill
 * babel-preset-es2015
 * babel-preset-stage-# you must have at-least stage-2 to run async methods.
-And then in your package JSON you must have the following lines.
+Then in your package JSON you must have the following lines.
+```
 "babel": {
   "presets": [
     "es2015",
     "stage-#"
   ]
 }
+```
+
 You must also put the following in your file before you require the npm.
+```
 require("babel-core/register");
 require("babel-polyfill");
+```
 This has been tested with babel 6 only.
 
 Running
 =======
+```
 require("babel-core/register");
 require("babel-polyfill");
 require( "esnextws" ).init( config, services );
-
+```
 Where services are an array of locations of servers to boot.
 
 Configuration Options
 ==============
 * port: Port to run the web server on.
 * adminHost: Host on server that is allowed to see the admin.
+
 Unix based OS only:
 * uid: User id or name that will persist the server.
 * gid: Group id or name that will persist the server.
