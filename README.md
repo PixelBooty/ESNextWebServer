@@ -6,15 +6,19 @@ The first open source ecmaNext web server for nodejs.
 Work in progress
 ================
 
-This server started with EMCA6 but has moved to EMCA7 for use of async methods.
+This server started with ECMA6 but has moved to ECMA7 for use of async methods.
 Note that this is currently under heavy development. The server is stable however lacking in a few features.
 Live speed testing has shown that when using the server as intended it is one of the fastest web servers.
 This server has been used in a few production environments including our own web server http://www.adaptivelite.com.
 
 Install
 =======
-npm install esnextws
-Note: You will have to have babel setup in your project with polyfill to run this server.
+`npm install esnextws`
+
+Babel Help
+==========
+You will have to have babel setup in your project with polyfill to run this server.
+If you have never used babel you can following these instructions or visit https://babeljs.io for more details.
 To do this you must include the following npm packages to your project:
 * babel,
 * babel-cli
@@ -62,4 +66,5 @@ Road map
 
 1. Finish Admin host.
 2. Working example services and hosts.
-3. More MimeTypes.
+3. More mime-types.
+4. Session cookie security improvements.
