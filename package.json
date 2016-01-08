@@ -1,24 +1,48 @@
 {
-  "name" : "es6web",
-  "description" : "ECMA 6 Web Server",
-  "version" : "0.0.1",
-  "private" : true,
-  "dependencies" : {
-    "ejs" : "1.0.0",
-    "http-proxy" : "1.1.6",
-    "less" : "1.7.4",
-    "mongodb" : "1.4.7",
-    "multiparty" : "3.3.1",
-    "node-uuid" : "1.4.1",
-    "nodeunit" : "0.9.0",
-    "querystring" : "0.2.0",
-    "traceur" : "0.0.41",
-    "walk" : "2.3.3",
-    "request": "2.55.0",
+  "name": "esnextws",
+  "version": "0.1.3",
+  "descripton": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile" : "node ./node_modules/babel-cli/bin/babel.js es6web --presets es2015,stage-2 --out-dir es6web-es5",
+    "postinstall" : "npm run compile"
+  },
+  "keywords": [
+    "EMCA6",
+    "Web Server",
+    "ESNext",
+    "babel",
+    "Server"
+  ],
+  "author": "AdaptivElite <steven@adaptivelite.com> (http://www.adaptivelite.com)",
+  "license": "ISC",
+  "dependencies": {
+    "babel": "^6.1.18",
+    "babel-cli": "^6.2.0",
+    "babel-polyfill": "^6.3.14",
+    "babel-preset-es2015": "^6.1.18",
+    "babel-preset-stage-2": "^6.1.18",
+    "ejs": "1.0.0",
     "html-minifier": "0.7.2",
+    "http-proxy": "1.1.6",
+    "imagesize": "1.0.0",
+    "less": "1.7.4",
+    "massive": "2.0.9",
+    "mongodb": "1.4.7",
+    "multiparty": "3.3.1",
+    "node-uuid": "1.4.1",
     "nodemailer": "1.4.0",
     "nodemailer-smtp-transport": "1.0.3",
-    "massive": "2.0.9",
-    "imagesize" : "1.0.0"
+    "nodeunit": "0.9.0",
+    "querystring": "0.2.0",
+    "request": "2.55.0",
+    "walk": "2.3.3"
+  },
+  "babel": {
+    "presets": [
+      "es2015",
+      "stage-2"
+    ]
   }
 }

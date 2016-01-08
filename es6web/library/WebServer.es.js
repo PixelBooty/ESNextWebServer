@@ -1,29 +1,29 @@
-/* 
+/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
 
 let qs = require('querystring');
-let qs = require('querystring');
 let multiparty = require( 'multiparty' );
 
 export class WebServer{
   constructor( settings ) {
     this._serverLibrary = settings.serverLibrary;
+    this._services = settings.services;
     this._webServer = settings.webServer;
     this._config = settings.config;
     this._hosts = null;
     process.__server = this;
     this._StartServer();
   }
-  
+
   _StartServer(){
     this._webServer.on( "request",  this._CompileRequest.bind( this ) );
-    
+
     let serviceManager = this._serverLibrary.AddLib(
       "ServiceManager",
-      { webServer : this, serverLibrary : this._serverLibrary },
+      { webServer : this, serverLibrary : this._serverLibrary, services : this._services },
       "webserver",
       ( libObject ) => {
         this._services = libObject;
@@ -33,8 +33,8 @@ export class WebServer{
     if( serviceManager !== null ){
       this._services = hostManager;
     }
-    
-    let routeObject = this._serverLibrary.AddLib( 
+
+    let routeObject = this._serverLibrary.AddLib(
       "Router",
       null,
       "webserver",
@@ -45,8 +45,8 @@ export class WebServer{
     if( routeObject !== null ){
       this._router = routeObject;
     }
-    
-    let connectionObject = this._serverLibrary.AddLib( 
+
+    let connectionObject = this._serverLibrary.AddLib(
       "ConnectionManager",
       { webServer : this },
       "webserver",
@@ -57,8 +57,8 @@ export class WebServer{
     if( routeObject !== null ){
       this._router = routeObject;
     }
-    
-    let contentBuffer = this._serverLibrary.AddLib( 
+
+    let contentBuffer = this._serverLibrary.AddLib(
       "ContentBuffer",
       null,
       "webserver",
@@ -69,8 +69,8 @@ export class WebServer{
     if( contentBuffer !== null ){
       this._contentBuffer = contentBuffer;
     }
-  
-    let postFile = this._serverLibrary.AddLib( 
+
+    let postFile = this._serverLibrary.AddLib(
       "PostFile",
       null,
       "webserver",
@@ -81,40 +81,40 @@ export class WebServer{
     if( postFile !== null ){
       this._postFile = postFile;
     }
-    
+
     this._serverLibrary.AddLib( "ViewHelper", null, "webserver", ( ) => {
       this._serverLibrary.ForceRecompile( "ContentBuffer", __dirname + "/ContentBuffer" );
     });
-    
+
     this._serverLibrary.AddLib( "Connection", null, "webserver", ( ) => {
       this._serverLibrary.ForceRecompile( "ConnectionManager", __dirname + "/ConnectionManager" );
     });
-    
+
     this._serverLibrary.AddLib( "Header", null, "webserver", ( ) => {
       this._serverLibrary.ForceRecompile( "ContentBuffer", __dirname + "/ContentBuffer" );
     } );
   }
-  
+
   get database(){
     return this._db;
   }
-  
+
   get connection(){
     return this._connection.compiled;
   }
-  
+
   get router(){
     return this._router.uncompiled;
   }
-  
+
   get services(){
     return this._services.compiled;
   }
-  
+
   get contentBuffer(){
     return this._contentBuffer.uncompiled;
   }
-  
+
   _CompileRequest( request, response ){
     request.ssl = false;
     request.post = {};
@@ -153,7 +153,7 @@ export class WebServer{
               while( fieldName.indexOf( '.') !== -1 ){
                 let depthAddition = fieldName.substring( 0, fieldName.indexOf( '.' ) );
                 if( requestFieldDepth[depthAddition] === undefined ){
-                  requestFieldDepth[depthAddition] = {};  
+                  requestFieldDepth[depthAddition] = {};
                 }
                 requestFieldDepth = requestFieldDepth[depthAddition];
                 fieldName = fieldName.substring( depthAddition.length + 1 );
@@ -173,25 +173,25 @@ export class WebServer{
               while( fieldName.indexOf( '.') !== -1 ){
                 let depthAddition = fieldName.substring( 0, fieldName.indexOf( '.' ) );
                 if( requestFieldDepth[depthAddition] === undefined ){
-                  requestFieldDepth[depthAddition] = {};  
+                  requestFieldDepth[depthAddition] = {};
                 }
                 requestFieldDepth = requestFieldDepth[depthAddition];
                 fieldName = fieldName.substring( depthAddition.length + 1 );
               }
-              requestFieldDepth[fieldName] = new this._postFile.uncompiled( files[file][0] ); 
+              requestFieldDepth[fieldName] = new this._postFile.uncompiled( files[file][0] );
             }
           }
         }
-        
+
         this._DoRequest( request, response );
       } );
     }
     else{
       this._DoRequest( request, response );
     }
-    
+
   }
-  
+
   _DoRequest( request, response ){
     this._GenerateCookies( request );
     let host = this.services.GetHost( request );
@@ -205,7 +205,7 @@ export class WebServer{
       response.end( "Requested host does not exist on this server, Error: 504." );
     }
   }
-  
+
   _GenerateCookies( request ){
     if( request.headers.cookie ){
       request.cookies = qs.parse( request.headers.cookie.replace( "; ", "&" ).replace( ";", "&" ) );

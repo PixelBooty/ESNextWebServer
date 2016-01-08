@@ -3,6 +3,7 @@ let fs = require( "fs" );
 export class ServiceManager{
   constructor( settings ){
     this._services = {};
+    this._serviceList = settings.services;
     this._server = settings.webServer;
     this._coreLibrary = settings.serverLibrary;
     //this._PreLoadServices();
@@ -24,7 +25,7 @@ export class ServiceManager{
       }
     }
   }*/
-  
+
   _InitServiceBase(){
     let serviceBase = this._coreLibrary.AddLib( "base/ServiceBase", null, "servicebase", this._RebuildBaseService.bind( this ) );
     if( this._hostManager !== null ){
@@ -37,6 +38,10 @@ export class ServiceManager{
   }
 
   _RebuildBaseService(){
+    //TODO change this to explicit after it is working in normal mode.
+    //for( let i = 0; i < this._serviceList.length; i++ ){
+    //  console.log( "Trying to load " + this._serviceList[i] );
+    //}
     var serviceLib = this._coreLibrary.GetPathListener( "Services/" );
     this._coreLibrary.AddPathListener( "Services/", "Service", null, this._AddServiceListener.bind( this ), 1 );
     if( serviceLib !== null ){
@@ -44,6 +49,7 @@ export class ServiceManager{
         this._coreLibrary.ForceRecompile( "Services/", service );
       }
     }
+
   }
 
   GetHost( request ){

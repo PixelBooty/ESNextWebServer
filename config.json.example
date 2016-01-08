@@ -1,6 +1,0 @@
-{
-  "port" : 8088,
-  "adminHost" : "es6admin.dev",
-  "uid" : 1000,
-  "gid" : 1000
-}

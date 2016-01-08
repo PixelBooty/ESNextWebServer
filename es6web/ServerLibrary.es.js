@@ -4,16 +4,17 @@ require( "./ProtoTypes.js" );
 let httpServer = require( "http" );
 
 export class ServerLibrary{
-  constructor() {
+  constructor( config, services ) {
+    this._services = services;
     this._serverLibrary = null;
     this._server = null;
     this._webServer = null;
-    this._config = process.config;
+    this._config = config;
     this._DefaultConfigs();
     this._InitWebServer();
     this._InitLibrary();
   }
-  
+
   get library(){
     return this._serverLibrary;
   }
@@ -28,11 +29,11 @@ export class ServerLibrary{
   _InitWebServer(){
     this._webServer = httpServer.createServer( );
     this._webServer.listen( this._config.port, this._config.host, null, () => {
-      if( this._config.gid ){
+      if( this._config.gid && process.setgid !== undefined ){
         process.setgid( 1000 );
       }
 
-      if( this._config.uid ){
+      if( this._config.uid && process.setuid !== undefined ){
         process.setuid( 1000 );
       }
     });
@@ -45,7 +46,7 @@ export class ServerLibrary{
     console.log( "Library initalized." );
     this._serverLibrary.AddLib(
       "WebServer",
-      { serverLibrary : this._serverLibrary, config : this._config, webServer : this._webServer },
+      { serverLibrary : this._serverLibrary, config : this._config, webServer : this._webServer, services : this._services },
       "library",
       ( libObject ) => {
         this._server = libObject;
@@ -57,5 +58,5 @@ export class ServerLibrary{
     }
     GLOBAL.library = this._serverLibrary;
   }
-  
+
 }

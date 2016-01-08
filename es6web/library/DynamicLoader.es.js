@@ -1,6 +1,7 @@
 let fs = require( "fs" );
 let crypto = require('crypto');
-let traceur = require( "traceur" );
+let path = require( "path" );
+//let traceur = require( "traceur" );
 
 /**
  * Works to allow libraries and other script sources to load and reload when they are updated. In other words this is a JIT compiler and cacher for nodejs.
@@ -8,15 +9,15 @@ let traceur = require( "traceur" );
 export class DynamicLoader{
   /**
    * Constructor for DynamicLoader.
-   * @param string path - Path of the loader libs.
-   * @param object settings - Settings for loader.
+   * @param {string} path - Path of the loader libs.
+   * @param {object} settings - Settings for loader.
    */
   constructor( path, settings = {} ) {
     //Default settings
     settings.useES6 = settings.useES6 || true;
     //settings.preloadHooks = settings.preloadHooks || [];
     //settings.requiredPath = settings.requiredPath || "";
-    
+
     this._path = path;
     this._loadedLibs = {};
     this._useES6 = settings.useES6;
@@ -27,18 +28,27 @@ export class DynamicLoader{
     this._pathHashs = {};
     this._pathWatchers = {};
     this._indexWatchers = {};
+    this._spawns = {};
+    this._requireMap = {};
     if( this._useES6 ){
       this._scriptExt = ".es.js";
     }
     this._AddWatchPath( this._path, this._LibPathWatch.bind( this ), -1 );
   }
-  
+
+  SpawnNewLoader( path ){
+    if( this._spawns[path] === undefined ){
+      this._spawns[path] = new DynamicLoader( path );
+    }
+    return this._spawns[path];
+  }
   /**
    * Adds a lib watcher into the current library path for the loader.
-   * @param string libPath - Path of the lib relative to this._path.
-   * @param object rebuildSettings - What params should be passed to lib when compiled.
-   * @param function postBuildMethod - Method to call once lib is rebuilt.
-   * @returns object - The lib if it was added before, or null.
+   * @param {string} libPath - Path of the lib relative to this._path.
+   * @param {Object} rebuildSettings - What params should be passed to lib when compiled.
+   * @param {string} postBuildEventName - Tracking name for rebuilding the file.
+   * @param {Function} postBuildMethod - Method to call once lib is rebuilt.
+   * @returns {object} - The lib if it was added before, or null.
    */
   AddLib( libPath, rebuildSettings, postBuildEventName, postBuildMethod ){
     let preDefined = true;
@@ -62,17 +72,17 @@ export class DynamicLoader{
     }
     //Compile Lib
     this._RecompileLib( libPath );
-    
+
     if( preDefined ){
       return this._loadedLibs[libPath];
     }
-    
+
     return null;
   }
   /**
    * Adds a watcher index for path.
-   * @param string path - Path to generate an index for.
-   * @param function onMofifed - Callback on a index change event.
+   * @param {string} path - Path to generate an index for.
+   * @param {Function} onModified - Callback on a index change event.
    */
   AddIndexWatcher( path, onModified ){
     let preDefined = true;
@@ -89,8 +99,8 @@ export class DynamicLoader{
     else{
       this._indexWatchers[path].indexChangeEvent = onModified;
     }
-    
-    this._AddWatchPath( 
+
+    this._AddWatchPath(
       path,
       ( event, fileName, libPath, passedDepthDir, fileext, dirPath ) => {
         if( event === "change" ){
@@ -102,7 +112,7 @@ export class DynamicLoader{
           } );
         }
         else{
-          
+
         }
       },
       -1,
@@ -119,20 +129,20 @@ export class DynamicLoader{
       true,
       "*"
     );
-    
+
     if( preDefined ){
       return this._indexWatchers[path];
     }
     else{
       this._CompileFileIndex( path, path );
     }
-    
+
     return null;
   }
   /**
    * Compiles the index in non watch so it starts with one before there are files changed/added/removed.
-   * @param string orgPath - Original path for lookup.
-   * @param string path - Current executing path.
+   * @param {string} orgPath - Original path for lookup.
+   * @param {string} path - Current executing path.
    */
   _CompileFileIndex( orgPath, path ){
     fs.readdir( path, ( error, files ) => {
@@ -151,19 +161,19 @@ export class DynamicLoader{
   }
   /**
    * Adds a path listener to the loader.
-   * @param string path - Path to be listened to.
-   * @param array compatiableObjects - What objects types can be compiled and stored.
-   * @param object rebuildSettings - If compile what params should be passed.
-   * @param function postBuildMethod - Method to call once files are rebuilt.
-   * @param int depth - How deep in the directoies are the files being checked for. -1 for all.
-   * @param bool compile - Should the files be compiled?
-   * @param string ext - Extention of files to rebuild.
+   * @param {string} path - Path to be listened to.
+   * @param {Array<string>} compatiableObjects - What objects types can be compiled and stored.
+   * @param {Object} rebuildSettings - If compile what params should be passed.
+   * @param {Function} postBuildMethod - Method to call once files are rebuilt.
+   * @param {number} depth - How deep in the directoies are the files being checked for. -1 for all.
+   * @param {bool} compile - Should the files be compiled?
+   * @param {string} ext - Extention of files to rebuild.
    */
   AddPathListener( path, compatiableObjects, rebuildSettings, postBuildMethod, depth, compile = true, ext = null ){
     if( ext === null ){
       ext = this._scriptExt;
     }
-    
+
     if( this._pathListeners[path] === undefined ){
       if( compatiableObjects === "*" ){
         compatiableObjects = [];
@@ -184,12 +194,12 @@ export class DynamicLoader{
       this._pathListeners[path].rebuildSettings = rebuildSettings;
       this._pathListeners[path].postBuildMethod["postbuild"] = postBuildMethod;
     }
-    
+
     if( this._watchedPaths[path] === undefined ){
       this._watchedPaths[path] = true;
     }
 
-    this._AddWatchPath( 
+    this._AddWatchPath(
       path,
       ( event, fileName, libPath, passedDepthDir, fileext ) => {
         if( passedDepthDir === 0 || passedDepthDir === -1 ){
@@ -215,16 +225,16 @@ export class DynamicLoader{
         }
       }, this._pathListeners[path].compatiableObjects.length === 0, ext
     );
-    
+
     this._CompilePathListener( path, path, depth, ext );
-    
+
   }
   /**
    * Compiles the path for the path listener initally to make sure all files without changes are also notified.
-   * @param string orgPath - Original path for lookup.
-   * @param string path - Current executing path.
-   * @param int depth - Current depth at 0 it will stop recurisive search.
-   * @param string ext - Extention of files to be notified for.
+   * @param {string} orgPath - Original path for lookup.
+   * @param {string} path - Current executing path.
+   * @param {number} depth - Current depth at 0 it will stop recurisive search.
+   * @param {string} ext - Extention of files to be notified for.
    */
   _CompilePathListener( orgPath, path, depth, ext ){
     fs.readdir( path, ( error, files ) => {
@@ -241,32 +251,32 @@ export class DynamicLoader{
           }
           else{
             let objectName = files[fspfItr].replace( ext, "" );
-            if( ( files[fspfItr].EndsWith( ext ) || ext === "*" ) && this._pathListeners[orgPath].compatiableObjects.length > 0 && this._pathListeners[orgPath].compatiableObjects.indexOf( objectName ) !== -1 ){
+            if( ( files[fspfItr].endsWith( ext ) || ext === "*" ) && this._pathListeners[orgPath].compatiableObjects.length > 0 && this._pathListeners[orgPath].compatiableObjects.indexOf( objectName ) !== -1 ){
               this._LibPathWatch( "added", path + files[fspfItr], orgPath, depth, ext );
             }
-            else if( ( files[fspfItr].EndsWith( ext ) || ext === "*" ) && this._pathListeners[orgPath].compatiableObjects.length === 0 ){
+            else if( ( files[fspfItr].endsWith( ext ) || ext === "*" ) && this._pathListeners[orgPath].compatiableObjects.length === 0 ){
               this._LibPathWatch( "added", path + files[fspfItr], orgPath, depth, ext );
             }
           }
-          
+
         } );
       }
-      
+
     } );
-    
+
   }
-  
+
   /**
    * Checks to see if the loader has a library.
-   * @retruns bool - Do the lib exist?
+   * @return {bool} Do the lib exist?
    */
   HasLib( libPath ){
     return this._loadedLibs[libPath] !== undefined;
   }
   /**
    * Gets a path listener for path.
-   * @param string path - Path of the path listener to get.
-   * @retruns object - Path listener for pass or null if none.
+   * @param {string} path - Path of the path listener to get.
+   * @return {Object} Path listener for pass or null if none.
    */
   GetPathListener( path ){
     if( this._pathListeners[path] !== undefined ){
@@ -276,24 +286,24 @@ export class DynamicLoader{
   }
   /**
    * Gets a library for libPath.
-   * @param string libPath - Path of lib to get.
-   * @return object - Lib object from path or null if none.
+   * @param {string} libPath - Path of lib to get.
+   * @return {Object} Lib object from path or null if none.
    */
   GetLib( libPath ){
     if( this._loadedLibs[libPath] !== undefined ){
       return this._loadedLibs[libPath];
     }
-    
+
     return null;
   }
   /**
    * Adds a path to be watched and reported on.
-   * @param string path - Path to be watched.
-   * @param function watchMethod - Callback for file events.
-   * @param string subDirDepth - How deep does the search have to go to find files of requested ext.
-   * @param function directoryChange - Callback for directory events.
-   * @param bool allPaths - this._watchedPaths only or all paths?
-   * @param string ext - What should file file ext be, * for all ext.
+   * @param {string} path - Path to be watched.
+   * @param {Function} watchMethod - Callback for file events.
+   * @param {string} subDirDepth - How deep does the search have to go to find files of requested ext.
+   * @param {Function} directoryChange - Callback for directory events.
+   * @param {bool} allPaths - this._watchedPaths only or all paths?
+   * @param {string} ext - What should file file ext be, * for all ext.
    */
   _AddWatchPath( path, watchMethod, subDirDepth, directoryChange = null, allPaths = false, ext = null ){
     if( ext === null ){
@@ -307,12 +317,12 @@ export class DynamicLoader{
   }
   /**
    * Same as _AddWatchPath but can go into subdirectories.
-   * @param string orgPath - Orginal path for lookup.
-   * @param string path - Path to be watched.
-   * @param string subDirDepth - How deep does the search have to go to find files of requested ext.
-   * @param function directoryChange - Callback for directory events.
-   * @param bool allPaths - this._watchedPaths only or all paths?
-   * @param string ext - What should file file ext be, * for all ext.
+   * @param {string} orgPath - Orginal path for lookup.
+   * @param {string} path - Path to be watched.
+   * @param {string} subDirDepth - How deep does the search have to go to find files of requested ext.
+   * @param {Function} directoryChange - Callback for directory events.
+   * @param {bool} allPaths - this._watchedPaths only or all paths?
+   * @param {string} ext - What should file file ext be, * for all ext.
    */
   _DoWatchPath( orgPath, path, subDirDepth, directoryChange, allPaths, ext ){
     //TODO Make this async.
@@ -345,8 +355,8 @@ export class DynamicLoader{
                 }
               }
               else{
-                
-                if( ( allPaths && ext === "*" ) || ( allPaths && fileName.EndsWith( ext ) ) || this._watchedPaths[ libPath ] ){
+
+                if( ( allPaths && ext === "*" ) || ( allPaths && fileName.endsWith( ext ) ) || this._watchedPaths[ libPath ] ){
                   this._pathWatchers[orgPath]( event, fileName, libPath, passedDepthDir, ext, path );
                 }
                 else{
@@ -372,12 +382,16 @@ export class DynamicLoader{
           }
         }
       });
-      
+
     } );
     if( subDirDepth == -1 || subDirDepth > 0 ){
       fs.readdir( path, ( error, files ) => {
         for( let fi = 0; fi < files.length; fi++ ){
           fs.stat( path + files[fi], ( error, stats ) => {
+            if( error ){
+              console.error( "Unable to read file/directory for file watcher." );
+              console.dump( error );
+            }
             if( stats.isDirectory() ){
               let passedDepth = subDirDepth;
               if( passedDepth !== -1 ){
@@ -391,31 +405,31 @@ export class DynamicLoader{
             }
           } );
         }
-        
+
       });
     }
   }
   /**
    * Base watch callback method that allows for compile or file data store.
-   * @param string event - File event.
-   * @param string fileName - Name of file that fired an event.
-   * @param string path - Full path of file.
-   * @param int depth - Unused and only here for path listen system.
-   * @param string ext - Extention of files to compile at path, if null uses default.
+   * @param {string} event - File event.
+   * @param {string} fileName - Name of file that fired an event.
+   * @param {string} path - Full path of file.
+   * @param {number} depth - Unused and only here for path listen system.
+   * @param {string} ext - Extention of files to compile at path, if null uses default.
    */
   _LibPathWatch( event, fileName, path, depth, ext = null ){
     if( ext === null ){
       ext = this._scriptExt;
     }
-    if( fileName.EndsWith( ext ) || ext === "*" ){
+    if( fileName.endsWith( ext ) || ext === "*" ){
       //Hex check on file if it is one that is watched.//
       this._RecompileLib( path, fileName );
     }
   }
   /**
    * Gets a hash and calls back with ( hash ) => { } for hash comperisons.
-   * @param string path - Path of the file to get the hash for.
-   * @param function callback - 
+   * @param {string} path - Path of the file to get the hash for.
+   * @param {Function} callback - Method to call after hash as been computed.
    */
   _GetHash( path, callback ){
     let hash = crypto.createHash('sha1');
@@ -427,25 +441,25 @@ export class DynamicLoader{
         callback( hash.read() );
       }
       else{
-        console.log( "Hash error with " + path );
+        console.error( "Hash error with " + path );
       }
     } );
-    
+
   }
-  
+
   /**
    * Forces a file or library to recompile.
-   * @param string libPath - Path of the file in the this._loadedLibs or this._pathListeners.
-   * @param string fullFileName - Full filename of library file.
+   * @param {string} libPath - Path of the file in the this._loadedLibs or this._pathListeners.
+   * @param {string} fullFileName - Full filename of library file.
    */
   ForceRecompile( libPath, fullFileName ){
     this._RecompileLib( libPath, fullFileName, true );
   }
   /**
    * Recompiles the path or library file.
-   * @param string libPath - Path of the file in the this._loadedLibs or this._pathListeners.
-   * @param string fullFileName - Full filename of the file.
-   * @param bool forcedRecompile - Should a recompile of code be forced regardless of the hash?
+   * @param {string} libPath - Path of the file in the this._loadedLibs or this._pathListeners.
+   * @param {string} fullFileName - Full filename of the file.
+   * @param {bool} forcedRecompile - Should a recompile of code be forced regardless of the hash?
    */
   _RecompileLib( libPath, fullFileName, forcedRecompile = false ){
     let libPathObject = null;
@@ -459,7 +473,25 @@ export class DynamicLoader{
       libPathObjectName = libPath.split( "/" )[libPath.split( "/" ).length - 1];
     }
     else{
+      if( this._pathListeners[libPath] === undefined ){
+        return;
+        //This might need work TODO
+        let libPaths = libPath.split( "/" );
+        libPaths.pop();
+        let libPathSearch = libPaths.join( "/" ) + "/";
+        console.log( "Full name " + fullFileName );
+        if( this._pathListeners[libPathSearch] === undefined ){
+          console.error( "Bad library path " + libPath );
+          return;
+        }
+        else{
+          libPath = libPathSearch;
+        }
+        //This might need work TODO
+      }
       libPathObject = this._pathListeners[libPath];
+      //console.log( "Path listener libs for " + libPath );
+      //console.dump( this._pathListeners[libPath] );
       if( this._pathListeners[libPath].libs[fullFileName] === undefined ){
         this._pathListeners[libPath].libs[fullFileName] = {
           path : fullFileName
@@ -478,6 +510,9 @@ export class DynamicLoader{
             libBuildObject.compiled.Destroy( ( ) => {
               libCompiledObject = this._ReloadCompile( filePath, libPathObject, libPathObjectName, true );
               if( libCompiledObject !== null ){
+                if( libBuildObject.compiled && libBuildObject.compiled["UpdateFromRecompiled"] ){
+                  libBuildObject.compiled["UpdateFromRecompiled"]( libCompiledObject );
+                }
                 libBuildObject.compiled = libCompiledObject;
                 this._PostBuildMethod( libPathObject, libBuildObject, libPath );
               }
@@ -486,6 +521,9 @@ export class DynamicLoader{
           else{
             libCompiledObject = this._ReloadCompile( filePath, libPathObject, libPathObjectName, true );
             if( libCompiledObject !== null ){
+              if( libBuildObject.compiled && libBuildObject.compiled["UpdateFromRecompiled"] ){
+                libBuildObject.compiled["UpdateFromRecompiled"]( libCompiledObject );
+              }
               libBuildObject.compiled = libCompiledObject;
               this._PostBuildMethod( libPathObject, libBuildObject, libPath );
             }
@@ -516,8 +554,9 @@ export class DynamicLoader{
   }
   /**
    * Fire post build event.
-   * @param object libPathObject - Path infomation object.
-   * @param object libBuildObject - Build infomation object.
+   * @param {Object} libPathObject - Path infomation object.
+   * @param {Object} libBuildObject - Build infomation object.
+   * @param {string} path - Path of the object.
    */
   _PostBuildMethod( libPathObject, libBuildObject, path ){
     if( libPathObject.postBuildMethod !== null ){
@@ -528,35 +567,68 @@ export class DynamicLoader{
   }
   /**
    * Attempts to load a script.
-   * @param string filePath - Path of the script to attempt to load.
-   * @param object libPathObject - Path infomation object.
-   * @param object libPathObjectName - Name of object if there is one to compile.
-   * @param bool compile - Should it compile?
-   * @returns mixed - Compiled library, or uncompiled object, or null if parse error.
+   * @param {string} filePath - Path of the script to attempt to load.
+   * @param {Object} libPathObject - Path infomation object.
+   * @param {Object} libPathObjectName - Name of object if there is one to compile.
+   * @param {bool} compile - Should it compile?
+   * @return {*} - Compiled library, or uncompiled object, or null if parse error.
    */
   _ReloadCompile( filePath, libPathObject, libPathObjectName, compile ){
-    let oldCache = require.cache[filePath];
+    let oldCache = null;
     try{
-      let libExports = traceur.require( filePath );
-      delete require.cache[filePath];
+      //let libExports = traceur.require( filePath );
+      let libExports = null;
+      filePath = filePath.replace( /(\/|\\)/g, path.sep );
+      if( this._requireMap[filePath] === undefined ){
+        let preCached = require.cache[filePath];
+        if( preCached === undefined ){
+          let requireKeys = Object.keys( require.cache );
+          let requirePoint = requireKeys.length;
+          libExports = require( filePath );
+          requireKeys = Object.keys( require.cache );
+          this._requireMap[filePath] = requireKeys[requirePoint];
+        }
+        else{
+          this._requireMap[filePath] = filePath;
+          oldCache = require.cache[this._requireMap[filePath]];
+          delete require.cache[this._requireMap[filePath]];
+          libExports = require( filePath );
+        }
+      }
+      else{
+        oldCache = require.cache[this._requireMap[filePath]];
+        delete require.cache[this._requireMap[filePath]];
+        libExports = require( filePath );
+      }
+
       //let loadedModuals = Object.keys(require('module')._cache );
       let lib = libExports[libPathObjectName];
-      if( compile ){
+      if( compile && typeof( lib ) === "function" ){
         return new lib( libPathObject.rebuildSettings );
       }
       else{
         return lib;
       }
-      
+
     }
     catch( ex ){
-      console.log( "Caught parse error with library, revering to old one. Lib: " + filePath );
-      console.log( ex );
-      require.cache[filePath] = oldCache;
+      if( oldCache !== null ){
+        require.cache[this._requireMap[filePath]] = oldCache;
+        console.error( "Caught parse error with library, revering to old one. Lib: " + filePath );
+        console.error( ex );
+        console.log( ex.stack );
+      }
+      else{
+        console.error( "Caught parse error with library, from inital boot Lib: " + filePath );
+        console.error( ex );
+        console.log( ex.stack );
+        console.error( "System with boot lib will not work until a new lib is loaded." );
+      }
+
       return null;
     }
   }
-  
+
   GetObject( objectLibPath ){
     var objectLib = this.GetLib( objectLibPath );
     if( objectLib !== null && objectLib.uncompiled !== undefined ){
@@ -566,7 +638,7 @@ export class DynamicLoader{
     return null;
   }
   //_RemoveWatchPath( path ){
-    
+
   //}
-  
+
 }
