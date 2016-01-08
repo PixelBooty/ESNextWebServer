@@ -5,11 +5,17 @@ The first open source ecmaNext web server for nodejs.
 
 Work in progress
 ================
-
 This server started with ECMA6 but has moved to ECMA7 for use of async methods.
-Note that this is currently under heavy development. The server is stable however lacking in a few features.
+The server is stable however lacking in a few features.
 Live speed testing has shown that when using the server as intended it is one of the fastest web servers.
 This server has been used in a few production environments including our own web server http://www.adaptivelite.com.
+
+Features
+========
+* Full featured web server that can run hosts using esnext in nodejs.
+* Dynamic compiled run-time updater that will allow you to make changes to services without halting the server.
+* Built in session manager, and database manager.
+* Custom packages within your servers.
 
 Install
 =======
@@ -46,11 +52,16 @@ This has been tested with babel 6 only.
 Running
 =======
 ```
-require("babel-core/register");
-require("babel-polyfill");
-require( "esnextws" ).init( config, services );
+require( "esnextws" ).init( configuration, services );
 ```
 Where services are an array of locations of servers to boot.
+
+Upcoming Compatibility Notice
+=============================
+Custom locations for services is going to take over the current service loader.
+As of version 1.0.0 you will have to put all your services in a "Services" directory in the root of your project.
+As of version 1.0.1 you will that directory will be not be required rather the services array.
+So to avoid a breaking change make sure to use both methods of including your service.
 
 Configuration Options
 ==============
@@ -64,6 +75,7 @@ Unix based OS only:
 Road map
 ========
 
+0. Custom service locations.
 1. Finish Admin host.
 2. Working example services and hosts.
 3. More mime-types.
