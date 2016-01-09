@@ -1,24 +1,25 @@
 import { DynamicLoader } from "../DynamicLoader.es.js";
 
 let fs = require( "fs" );
+let path = require( "path" );
 
 export class ServiceBase{
-  constructor( serviceManager, server, coreLibrary, path ){
+  constructor( serviceManager, server, coreLibrary, servicePath ){
     this._envConfig = {
       "production" : {},
       "staging" : {},
       "development" : {},
     };
-    this._serviceLibrary = new DynamicLoader( path + "/Library/" );
+    this._serviceLibrary = coreLibrary.SpawnNewLoader( process.cwd() + "/" + servicePath + "/Library/" );
     this._config = {};
     this._serviceManager = serviceManager;
     this._server = server;
     this._coreLibrary = coreLibrary;
-    this._serviceHostPath = path + "/Hosts/";
-    this._path = path;
+    this._serviceHostPath = servicePath + "/Hosts/";
+    this._path = servicePath;
     this._hosts = {};
     this._databases = {};
-    console.log( "Service added " + path );
+    console.log( "Service added " + servicePath );
     this.InitalizeService();
   }
 
