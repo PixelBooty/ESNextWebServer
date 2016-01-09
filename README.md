@@ -60,7 +60,7 @@ Upcoming Compatibility Notice
 =============================
 Custom locations for services is going to take over the current service loader.
 As of version 1.0.0 you will have to put all your services in a "Services" directory in the root of your project.
-As of version 1.0.1 you will that directory will be not be required rather the services array.
+As of version 1.1.0 you will that directory will be not be required rather the services array.
 So to avoid a breaking change make sure to use both methods of including your service.
 
 Configuration Options
