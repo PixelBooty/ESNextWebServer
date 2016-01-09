@@ -1,7 +1,7 @@
 {
   "name": "esnextws",
   "version": "1.0.0",
-  "descripton": "",
+  "descripton": "Web server like express and sails.js. Using ECMANext in run-time with run-time transpilation, and run-time editing support.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
