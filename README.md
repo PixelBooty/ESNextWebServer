@@ -26,8 +26,7 @@ Babel Help
 You will have to have babel setup in your project with polyfill to run this server.
 If you have never used babel you can following these instructions or visit https://babeljs.io for more details.
 To do this you must include the following npm packages to your project:
-* babel,
-* babel-cli
+* babel
 * babel-core
 * babel-polyfill
 * babel-preset-es2015
