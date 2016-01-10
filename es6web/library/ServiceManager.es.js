@@ -1,30 +1,17 @@
 let fs = require( "fs" );
+let path = require( "path" );
 
 export class ServiceManager{
   constructor( settings ){
     this._services = {};
-    this._serviceList = settings.services;
+    this._serviceList = {};
+    for( let i = 0; i < settings.services.length; i++ ){
+      this._serviceList[settings.services[i]] = {};
+    }
     this._server = settings.webServer;
     this._coreLibrary = settings.serverLibrary;
-    //this._PreLoadServices();
     this._InitServiceBase();
   }
-
-  /*_PreLoadServices(){
-    //Check for service links//
-    let services = fs.readdirSync( "Services" );
-    for( let i = 0; i < services.length; i++ ){
-      if( services[i].indexOf( ".service" ) !== -1 ){
-        let serviceName = services[i].substring( 0, services[i].indexOf( ".service" ) );
-        let linkTo = fs.readFileSync( "Services/" + services[i] ).toString();
-        if( fs.existsSync( "Services/" + serviceName ) ){
-          fs.unlinkSync( "Services/" + serviceName );
-        }
-        console.log( linkTo );
-        fs.linkSync( linkTo, "Services/" + serviceName );
-      }
-    }
-  }*/
 
   _InitServiceBase(){
     let serviceBase = this._coreLibrary.AddLib( "base/ServiceBase", null, "servicebase", this._RebuildBaseService.bind( this ) );
@@ -33,28 +20,25 @@ export class ServiceManager{
     }
   }
 
-  _AddServiceListener( path, libObject ){
+  _AddServiceListener( pathObject, libObject ){
     this._AddService( libObject.path.replace( "/Service.es.js", "" ).replace( "Services/", "" ), new libObject.uncompiled( this, this._server, this._coreLibrary, libObject.path.replace( "/Service.es.js", "" ) ) );
   }
 
   _RebuildBaseService(){
-    //TODO change this to explicit after it is working in normal mode.
-    //for( let i = 0; i < this._serviceList.length; i++ ){
-    //  console.log( "Trying to load " + this._serviceList[i] );
-    //}
-    var serviceLib = this._coreLibrary.GetPathListener( "Services/" );
-    this._coreLibrary.AddPathListener( "Services/", "Service", null, this._AddServiceListener.bind( this ), 1 );
-    if( serviceLib !== null ){
-      for( let service in serviceLib.libs ){
-        this._coreLibrary.ForceRecompile( "Services/", service );
+    for( let service in this._serviceList ){
+      let servicePath = service;
+      this._serviceList[service].servicePath = servicePath;
+      this._serviceList[service].listener = this._coreLibrary.GetPathListener( servicePath );
+      this._coreLibrary.AddPathListener( servicePath, "Service", null, this._AddServiceListener.bind( this ), 0 );
+      if( this._serviceList[service].listener !== null ){
+        this._coreLibrary.ForceRecompile( servicePath, this._serviceList[service].service );
       }
     }
-
   }
 
   GetHost( request ){
-    for( var service in this._services ){
-      var host = this._services[service].GetHost( request );
+    for( let service in this._services ){
+      let host = this._services[service].GetHost( request );
       if( host !== null ){
         return host;
       }
@@ -70,7 +54,7 @@ export class ServiceManager{
     return null;
   }
 
-  _AddService( path, serviceObject ){
-    this._services[path] = serviceObject;
+  _AddService( servicePath, serviceObject ){
+    this._services[servicePath] = serviceObject;
   }
 }

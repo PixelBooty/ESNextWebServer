@@ -54,13 +54,8 @@ Running
 require( "esnextws" ).init( configuration, services );
 ```
 Where services are an array of locations of servers to boot.
-
-Upcoming Compatibility Notice
-=============================
-Custom locations for services is going to take over the current service loader.
-As of version 1.0.0 you will have to put all your services in a "Services" directory in the root of your project.
-As of version 1.1.0 you will that directory will be not be required rather the services array.
-So to avoid a breaking change make sure to use both methods of including your service.
+Each service path must be relative to the root using / as the path separator on all operating systems, and must end with a '/'.
+Additionally each service must have babel and its own package.json with proper babel definitions.
 
 Configuration Options
 ==============
@@ -74,7 +69,6 @@ Unix based OS only:
 Road map
 ========
 
-0. Custom service locations.
 1. Finish Admin host.
 2. Working example services and hosts.
 3. More mime-types.

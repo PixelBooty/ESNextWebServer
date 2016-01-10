@@ -1,8 +1,9 @@
 {
   "name": "esnextws",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "descripton": "Web server like express and sails.js. Using ECMANext in run-time with run-time transpilation, and run-time editing support.",
   "main": "index.js",
+  "repository" : "https://github.com/AdaptivElite/ESNextWebServer",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "compile" : "node ./node_modules/babel-cli/bin/babel.js es6web --presets es2015,stage-2 --out-dir es6web-es5",
