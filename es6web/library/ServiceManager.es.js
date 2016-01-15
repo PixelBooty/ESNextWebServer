@@ -4,6 +4,7 @@ let path = require( "path" );
 export class ServiceManager{
   constructor( settings ){
     this._services = {};
+    this._sharedService = null;
     this._serviceList = {};
     for( let i = 0; i < settings.services.length; i++ ){
       this._serviceList[settings.services[i]] = {};
@@ -24,15 +25,19 @@ export class ServiceManager{
     this._AddService( libObject.path.replace( "/Service.es.js", "" ).replace( "Services/", "" ), new libObject.uncompiled( this, this._server, this._coreLibrary, libObject.path.replace( "/Service.es.js", "" ) ) );
   }
 
+  _BuildService( service ){
+    let servicePath = service;
+    this._serviceList[service].servicePath = servicePath;
+    this._serviceList[service].listener = this._coreLibrary.GetPathListener( servicePath );
+    this._coreLibrary.AddPathListener( servicePath, "Service", null, this._AddServiceListener.bind( this ), 0 );
+    if( this._serviceList[service].listener !== null ){
+      this._coreLibrary.ForceRecompile( servicePath + "Service.es.js", service );
+    }
+  }
+
   _RebuildBaseService(){
     for( let service in this._serviceList ){
-      let servicePath = service;
-      this._serviceList[service].servicePath = servicePath;
-      this._serviceList[service].listener = this._coreLibrary.GetPathListener( servicePath );
-      this._coreLibrary.AddPathListener( servicePath, "Service", null, this._AddServiceListener.bind( this ), 0 );
-      if( this._serviceList[service].listener !== null ){
-        this._coreLibrary.ForceRecompile( servicePath, this._serviceList[service].service );
-      }
+      this._BuildService( service );
     }
   }
 
@@ -47,11 +52,12 @@ export class ServiceManager{
     return null;
   }
 
+  SetSharedService( service ){
+    this._sharedService = service;
+  }
+
   GetSharedService() {
-    if( this._services["shared"] ) {
-      return this._services["shared"];
-    }
-    return null;
+    return this._sharedService;
   }
 
   _AddService( servicePath, serviceObject ){

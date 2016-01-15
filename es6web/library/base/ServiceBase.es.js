@@ -5,6 +5,7 @@ let path = require( "path" );
 
 export class ServiceBase{
   constructor( serviceManager, server, coreLibrary, servicePath ){
+    this._isSharedService = false;
     this._envConfig = {
       "production" : {},
       "staging" : {},
@@ -25,6 +26,9 @@ export class ServiceBase{
 
   async InitalizeService() {
     await this._SetupService();
+    if( this._isSharedService ){
+      this._serviceManager.SetSharedService( this );
+    }
     this._InitHosts();
   }
 
