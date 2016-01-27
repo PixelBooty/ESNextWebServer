@@ -1,4 +1,4 @@
-/* 
+/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -33,18 +33,19 @@ export class HostBase{
     this.SetupHost();
     this._InitModules();
     this._InitFileIndex();
+    console.log( "Added host " + hostDirectory );
   }
-  
+
   get service(){
     return this._service;
   }
-  
+
   get assetDirectory(){
     return this._assetDirectory;
   }
-  
+
   SetupHost(){}
-  
+
   GenerateConfig( request ){
     let config = {};
     for( var setting in this._config ){
@@ -55,9 +56,9 @@ export class HostBase{
     for( var setting in this._envConfig[request.env] ){
       config[setting] = this._envConfig[request.env][setting];
     }
-    return config;                    
+    return config;
   }
-  
+
   _InitModules(){
     this._modualDirectory = this._hostDirectory + "/Modules/";
     let moduleBase = this._coreLibrary.AddLib( "base/ModuleBase", null, this._modualDirectory, this._RebuildModuleBase.bind( this ) );
@@ -65,11 +66,11 @@ export class HostBase{
       this._RebuildModuleBase();
     }
   }
-  
+
   _AddModuleListener( path, libObject ){
     this._AddModule( libObject.path, new libObject.uncompiled( this, this._service, this._coreLibrary, libObject.path.replace( "/Module.es.js", "" ) ) );
   }
-  
+
   _RebuildModuleBase( libObject ){
     let moduleLib = this._coreLibrary.GetPathListener( this._modualDirectory );
     this._coreLibrary.AddPathListener( this._modualDirectory, "Module", null, this._AddModuleListener.bind( this ), 1 );
@@ -79,11 +80,12 @@ export class HostBase{
       }
     }
   }
-  
-  _AddAllowedHost( hostName, environment, host ){
+
+  _AddAllowedHost( hostName, environment, host = null ){
+    host = host || this;
     this._allowedHosts.push( { hostName, environment, host } );
   }
-  
+
   CheckHost( requestedHost ){
     for( let host of this._allowedHosts ){
       if( typeof( host.hostName ) === "string" ){
@@ -95,35 +97,35 @@ export class HostBase{
         // Regex
       }
     }
-    
+
     return null;
   }
-  
+
   CreateRouting( modual, view, controller, event ){
     console.log( "test" );
   }
-  
+
   HasModule( moduleName ){
     return this._modules[moduleName] !== undefined;
   }
-  
+
   get defaultModule(){
     return this._defaultModule;
   }
-  
+
   GetModule( moduleName ){
     if( this._modules[moduleName.toLowerCase()] !== undefined ){
       return this._modules[moduleName.toLowerCase()];
     }
-    
+
     return null;
   }
-  
+
   _AddModule( modulePath, moduleObject ){
     let path = modulePath.replace( this._modualDirectory, "" ).replace( "/Module.es.js", "" ).toLowerCase();
     this._modules[path] = moduleObject;
   }
-  
+
   _InitFileIndex(){
     this._assetDirectory = this._hostDirectory + "/public/";
     let watcherlib = this._coreLibrary.AddIndexWatcher( this._assetDirectory, this._OnIndexChange.bind( this ) );
@@ -131,7 +133,7 @@ export class HostBase{
       this._RebuildFileIndex( watcherlib.indexTree );
     }
   }
-  
+
   _RebuildFileIndex( pathIndex ){
     this._fileIndex.files = {};
     this._fileIndex.directories = {};
@@ -142,7 +144,7 @@ export class HostBase{
       this._fileIndex.directories[dir.toLowerCase()] = dir;
     }
   }
-  
+
   _OnIndexChange( indexWatchObject, type, event, path, dirPath, hash ){
     if( event === "add" ){
       if( type === "file" ){
@@ -151,7 +153,7 @@ export class HostBase{
       else{
         this._fileIndex.directories[path.toLowerCase()] = path;
       }
-      
+
     }
     else if( event === "change" ){
       if( type === "file" ){
@@ -167,7 +169,7 @@ export class HostBase{
       }
     }
   }
-  
+
   GetFile( fileName ){
     if( fileName == "" ) {
       return null;
@@ -198,8 +200,8 @@ export class HostBase{
         }
       }
     }
-    
+
     return null;
   }
-  
+
 }

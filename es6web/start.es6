@@ -5,5 +5,8 @@ import { ServerLibrary } from './ServerLibrary.es.js';
 module.exports = {
   init : ( config, services ) => {
     return new ServerLibrary( config, services );
+  },
+  scaffolding : () => {
+    require( "./Scaffolding.es.js" );
   }
 };

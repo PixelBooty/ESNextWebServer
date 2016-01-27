@@ -1,5 +1,5 @@
-ES6WebServer
-============
+ESNextWebServer
+===============
 
 The first open source ecmaNext web server for nodejs.
 
@@ -13,9 +13,8 @@ This server has been used in a few production environments including our own web
 Features
 ========
 * Full featured web server that can run hosts using esnext in nodejs.
-* Dynamic compiled run-time updater that will allow you to make changes to services without halting the server.
+* Dynamic compiled run-time updater that will allow you to make changes to services, hosts, modules, and controllers, without halting or restarting the server.
 * Built in session manager, and database manager.
-* Custom packages within your servers.
 
 Install
 =======
@@ -58,18 +57,24 @@ Each service path must be relative to the root using / as the path separator on 
 Additionally each service must have babel and its own package.json with proper babel definitions.
 
 Configuration Options
-==============
+=====================
 * port: Port to run the web server on.
-* adminHost: Host on server that is allowed to see the admin.
 
 Unix based OS only:
 * uid: User id or name that will persist the server.
 * gid: Group id or name that will persist the server.
 
+Quick Start Scaffolding
+=======================
+To get up and running quickly or to scaffold a new service you can use the auto scaffolding service that will build a service for you. From you project root run the following, and follow the prompts.
+```
+node node_modules/esnextws/scaffolding
+```
+Note: The Hello World scaffold is the only working option.
+
 Road map
 ========
 
-1. Finish Admin host.
-2. Working example services and hosts.
-3. More mime-types.
-4. Session cookie security improvements.
+1. Finish scaffold options.
+2. More mime-types.
+3. Session cookie security improvements.
