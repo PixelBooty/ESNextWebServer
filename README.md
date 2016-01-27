@@ -49,8 +49,11 @@ This has been tested with babel 6 only.
 
 Easy Babel Help
 ===============
-1. From your root project folder: `npm install babel babel-core babel-polyfill babel-preset-es2015 babel-preset-stage-2`
-2. Create a package.json with following.
+-1. From your root project folder: 
+```
+npm install babel babel-core babel-polyfill babel-preset-es2015 babel-preset-stage-2
+```
+-2. Create a package.json with following.
 ```
 "babel": {
   "presets": [
@@ -59,18 +62,23 @@ Easy Babel Help
   ]
 }
 ```
-3. Create a service using the Scaffolding `node node_modules/esnextws/scaffolding` 
-4. When prompted enter W for HelloWorld example.
-5. Create a script, for instance app.js, with the following code:
+-3. Create a service using the Scaffolding 
+```
+node node_modules/esnextws/scaffolding
+```
+-4. When prompted enter W for HelloWorld example.
+-5. Create a script, for instance app.js, with the following code:
 ```
 require("babel-core/register");
 require("babel-polyfill");
 require( "esnextws" ).init( { port : 8080 }, [ "hello/"] );
 ```
-6. From your console run your script
-`node app.js`
+-6. From your console run your script
+```
+node app.js
+```
 Visit localhost:8080/hello in your browser.
-7. Look at the wiki for more help with customization of your new server.
+-7. Look at the wiki for more help with customization of your new server.
 
 Running
 =======
