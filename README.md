@@ -59,15 +59,18 @@ Easy Babel Help
   ]
 }
 ```
-4. Create a service using the Scaffolding `node node_modules/esnextws/scaffolding` with Hello World scafold, and name of service as hello.
-5. Create a script that does the following.
+3. Create a service using the Scaffolding `node node_modules/esnextws/scaffolding` 
+4. When prompted enter W for HelloWorld example.
+5. Create a script, for instance app.js, with the following code:
 ```
 require("babel-core/register");
 require("babel-polyfill");
 require( "esnextws" ).init( { port : 8080 }, [ "hello/"] );
 ```
-5. Visit localhost:8080/hello in your browser.
-6. Look at the wiki for more help with customization of your new server.
+6. From your console run your script
+`node app.js`
+Visit localhost:8080/hello in your browser.
+7. Look at the wiki for more help with customization of your new server.
 
 Running
 =======
