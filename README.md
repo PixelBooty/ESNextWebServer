@@ -67,6 +67,7 @@ npm install babel babel-core babel-polyfill babel-preset-es2015 babel-preset-sta
 node node_modules/esnextws/scaffolding
 ```
 -4. When prompted enter W for HelloWorld example.
+
 -5. Create a script, for instance app.js, with the following code:
 ```
 require("babel-core/register");
