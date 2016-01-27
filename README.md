@@ -47,6 +47,19 @@ require("babel-polyfill");
 ```
 This has been tested with babel 6 only.
 
+Easy Babel Help
+===============
+1. `npm install babel babel-core babel-polyfill babel-preset-es2015 babel-preset-stage-2`
+2. Edit your projects package json to include the babel lines with stage # being 2
+3. Create a service using the Scaffolding `node node_modules/esnextws/scaffolding` with Hello World scafold, and name of service as hello.
+4. Create a script that does the following.
+```
+require("babel-core/register");
+require("babel-polyfill");
+require( "esnextws" ).init( { port : 8080, [ "hello/"] );
+```
+
+
 Running
 =======
 ```
