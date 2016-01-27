@@ -49,16 +49,25 @@ This has been tested with babel 6 only.
 
 Easy Babel Help
 ===============
-1. `npm install babel babel-core babel-polyfill babel-preset-es2015 babel-preset-stage-2`
-2. Edit your projects package json to include the babel lines with stage # being 2
-3. Create a service using the Scaffolding `node node_modules/esnextws/scaffolding` with Hello World scafold, and name of service as hello.
-4. Create a script that does the following.
+1. From your root project folder: `npm install babel babel-core babel-polyfill babel-preset-es2015 babel-preset-stage-2`
+2. Create a package.json with following.
+```
+"babel": {
+  "presets": [
+    "es2015",
+    "stage-#"
+  ]
+}
+```
+4. Create a service using the Scaffolding `node node_modules/esnextws/scaffolding` with Hello World scafold, and name of service as hello.
+5. Create a script that does the following.
 ```
 require("babel-core/register");
 require("babel-polyfill");
-require( "esnextws" ).init( { port : 8080, [ "hello/"] );
+require( "esnextws" ).init( { port : 8080 }, [ "hello/"] );
 ```
-
+5. Visit localhost:8080/hello in your browser.
+6. Look at the wiki for more help with customization of your new server.
 
 Running
 =======
