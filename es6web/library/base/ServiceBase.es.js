@@ -36,7 +36,7 @@ export class ServiceBase{
   AddLibrary( libraryName, compiledSettings = null ){
     return new Promise( ( resolve, reject ) => {
       let initalResolver = false;
-      this._serviceLibrary.AddLib( libraryName, compiledSettings, ( libObject ) => {
+      this._serviceLibrary.AddLib( libraryName, compiledSettings, libraryName + "serviceLibrary", ( libObject ) => {
         if( compiledSettings === null ){
           this._libraries[libraryName.toLowerCase()] = libObject.uncompiled;
         }
