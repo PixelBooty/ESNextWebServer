@@ -44,10 +44,10 @@ export class HostBase{
     let files = [];
     let directories = [];
     for( let file in this._fileIndex.files ){
-      files.push( file.replace( this._assetDirectory, "" ) );
+      files.push( this._fileIndex.files[file].replace( this._assetDirectory, "" ) );
     }
     for( let dir in this._fileIndex.directories ){
-      directories.push( dir.replace( this._assetDirectory, "" ) );
+      directories.push( this._fileIndex.directories[dir].replace( this._assetDirectory, "" ) );
     }
 
     return { files, directories };
