@@ -40,8 +40,9 @@ export class ViewHelper{
     this.title = this._GenerateTitle.bind( this );
     this.server = this._viewBag.server;
     this.isset = this._ViewBagHas.bind( this );
+    this.lib = this._viewBag.module.GetLibrary;
   }
-  
+
   Render( ){
     if( this.controller.view ){
       let view = this.controller.view;
@@ -67,15 +68,15 @@ export class ViewHelper{
     return this.buffer.output;
   }
 
-  
+
   _ViewBagHas( variableName ){
     if( this._viewBag[variableName] ){
       return true;
     }
-    
+
     return false;
   }
-  
+
   _RenderPartial( partialName, viewItems = null, searchLocalModule = true, searchHostSharedModule = true, searchSharedHost = true, searchSharedService = true ){
     let viewModuleRef = {};
     let partial = this.module.GetPartial( partialName, searchSharedService, searchSharedHost, searchHostSharedModule, searchLocalModule, viewModuleRef );
@@ -107,7 +108,7 @@ export class ViewHelper{
       this.module = localModule;
       return phtml;
     }
-    
+
     return "Server Error: partial not found " + partialName;
   }
 
@@ -118,7 +119,7 @@ export class ViewHelper{
     }
     return attrs.join( " " );
   }
-  
+
   _GenerateMetaData( metaData = null ){
     if( metaData !== null ) {
       this._metaData.push( metaData );
@@ -133,7 +134,7 @@ export class ViewHelper{
       return meta.join( "\n" );
     }
   }
-  
+
   _GenerateScriptData( scriptName = null, scriptAttributes = null ){
     if( scriptName !== null ){
       scriptAttributes.src = scriptName;
@@ -144,11 +145,11 @@ export class ViewHelper{
       for( let s = 0; s < this._scripts.length; s++ ){
         scripts.push( "<script " + this._CompireAttributeData( this._scripts[s] ) + "></script>" );
       }
-      
+
       return scripts.join( "\n" );
     }
   }
-  
+
   _GenerateBreadCrumbs( breadCrumbSettings = null ){
     if( breadCrumbSettings !== null ){
       this._breadCrumbs = breadCrumbSettings;
@@ -160,9 +161,9 @@ export class ViewHelper{
       }
       return breadcrumbs.join( " &gt; " );
     }
-    
+
   }
-  
+
   _GenerateTitle( title = null ){
     if( title !== null ){
       this._pageTitle = title;
@@ -170,9 +171,9 @@ export class ViewHelper{
     else{
       return this._pageTitle;
     }
-    
+
   }
-  
+
   _ShowViewContent(){
     return this._viewContent;
   }

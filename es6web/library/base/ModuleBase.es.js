@@ -32,6 +32,10 @@ export class ModuleBase{
     this._InitViews();
   }
 
+  GetLibrary( libraryName ){
+    return this._service.GetLibrary( libraryName );
+  }
+
   get service(){
     return this._service;
   }

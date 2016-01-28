@@ -19,9 +19,37 @@ export class ServiceBase{
     this._serviceHostPath = servicePath + "/Hosts/";
     this._path = servicePath;
     this._hosts = {};
+    this._libraries = {};
     this._databases = {};
     console.log( "Service added " + servicePath );
     this.InitalizeService();
+  }
+
+  GetLibrary( libraryName ){
+    if( this._libraries[libraryName.toLowerCase()] !== undefined ){
+      return this._libraries[libraryName.toLowerCase()];
+    }
+
+    return null;
+  }
+
+  AddLibrary( libraryName, compiledSettings = null ){
+    return new Promise( ( resolve, reject ) => {
+      let initalResolver = false;
+      this._serviceLibrary.AddLib( libraryName, compiledSettings, ( libObject ) => {
+        if( compiledSettings === null ){
+          this._libraries[libraryName.toLowerCase()] = libObject.uncompiled;
+        }
+        else{
+          this._libraries[libraryName.toLowerCase()] = libObject.compiled;
+        }
+
+        if( !initalResolver ){
+          initalResolver = true;
+          resolve();
+        }
+      });
+    });
   }
 
   async InitalizeService() {

@@ -76,9 +76,9 @@ class ReadInput{
     this._PrepDir( path + "/Hosts/hello-world/public" );
     this._WriteEsJs( path + "/Hosts/hello-world/Modules/Hello", "Module", "Module", [
       'this._defaultController = "helloworld";',
-      'this._defaultAction = null;',
+      'this._defaultAction = "hello";',
       'this._defaultView = null;',
-      'this._defaultActionView = "hello";',
+      'this._defaultActionView = null;',
       'this._defaultEvent = "";',
       'this._defaultLayout = "main";'
     ] );

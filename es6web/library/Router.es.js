@@ -1,4 +1,4 @@
-/* 
+/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -26,68 +26,77 @@ export class Router{
     this.post = request.post;
     this._BuildRoute();
   }
-  
+
   get request(){
     return this._request;
   }
-  
+
   get file(){
     return this._fileName;
   }
-  
+
   get module(){
     return this._module;
   }
-  
+
   get controller(){
     return this._controller;
   }
-  
+
   get event(){
     return this._eventName;
   }
-  
+
   get actionView(){
     return this._actionView;
   }
-  
+
   get controllerName(){
     return this._controllerName;
   }
-  
+
   get isFile(){
     return this._isFile;
   }
-  
+
+  get errors(){
+    if( this._routeError.length > 0 ){
+      return this._routeError;
+    }
+    else{
+      return null;
+    }
+  }
+
   _BuildRoute(){
     let urlRoute = this._url.toLowerCase();
     if( this._url.substr( 0, 1 ) == "/" ){
       urlRoute = urlRoute.substr( 1 );
     }
-    
+
     // module/actionView;controller@event
     let controller = "";
     let event = "";
     let module = "";
     let actionView = "";
     let fileName = "";
-    
+
     let eventArgument = urlRoute.split( "@" );
     if( eventArgument.length > 1 ){
       event = eventArgument[1];
       urlRoute = eventArgument[0];
     }
-    
+
     let controllerArgument = urlRoute.split( ";" );
     if( controllerArgument.length > 1 ){
       controller = controllerArgument[1];
       urlRoute = controllerArgument[0];
     }
-    
+
     if( event === "" && controller === "" ){
       fileName = urlRoute;
     }
-    
+
     let moduleArgument = urlRoute.split( "/" );
     if( moduleArgument.length > 0 ){
       if( this._host.HasModule( moduleArgument[0] ) ){
@@ -98,19 +107,19 @@ export class Router{
       else{
         module = this._host.defaultModule;
       }
-      
+
       actionView = urlRoute;
     }
     else{
       module = this._host.defaultModule;
     }
-    
+
     if( urlRoute !== "" ){
       actionView = urlRoute;
     }
-    
+
     this._moduleName = module;
-    
+
     this._actionView = actionView;
     this._controllerName = controller;
     this._eventName = event;
@@ -145,10 +154,10 @@ export class Router{
 
     if( this._routeError.length > 0 ){
       //Set view to error view if one is present.
-      console.log( "Route has error!" );
+      console.error( "Route has error!" );
     }
-    
+
     //return this._host.CreateRouting( modual, view, controller, event );
   }
-  
+
 }
