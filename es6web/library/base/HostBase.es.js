@@ -40,6 +40,19 @@ export class HostBase{
     return this._service;
   }
 
+  get pub(){
+    let files = [];
+    let directories = [];
+    for( let file in this._fileIndex.files ){
+      files.push( file.replace( this._assetDirectory, "" ) );
+    }
+    for( let dir in this._fileIndex.directories ){
+      directories.push( dir.replace( this._assetDirectory, "" ) );
+    }
+
+    return { files, directories };
+  }
+
   get assetDirectory(){
     return this._assetDirectory;
   }

@@ -46,6 +46,22 @@ export class ControllerBase{
     return this._layoutTemplate;
   }
 
+  get host(){
+    return this._module.host;
+  }
+
+  get module(){
+    return this._module;
+  }
+
+  get service(){
+    return this._module.service;
+  }
+
+  GetModel( modelName ){
+    return this._module.GetModel( modelName );
+  }
+
   Write( writeString ){
     this.output += writeString;
   }
