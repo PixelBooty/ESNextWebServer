@@ -57,6 +57,32 @@
     });
   }
 
+  Remove( selector, justone = true ){
+    return new Promise( ( resolve, reject ) => {
+      this._db.collection( this._collection ).remove( selector, justone, ( err, numberOfRemovedDocs ) => {
+        if( !err ){
+          resolve( numberOfRemovedDocs );
+        }
+        else{
+          reject( err );
+        }
+      } );
+    });
+  }
+
+  Drop( errorOnNotFound = false ){
+    return new Promise( ( resolve, reject ) => {
+      this._db.collection( this._collection ).drop( ( err, reply ) => {
+        if( !err || ( err.message === "ns not found" && !errorOnNotFound ) ){
+          resolve( reply );
+        }
+        else{
+          reject( err );
+        }
+      });
+    });
+  }
+
   /**
    * Updates a the mongo collection, awaitable.
    * @param object selector - The mongo selector.
