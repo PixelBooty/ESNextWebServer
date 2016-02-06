@@ -1,6 +1,7 @@
 ﻿export class MongoEntity{
-  constructor(database, module) {
+  constructor(database, module, masterdb = null ) {
     this._db = database;
+    this._dbMaster = masterdb;
   }
 
   get _collection(){ }
@@ -46,7 +47,11 @@
 
   Insert( document, options = {} ) {
     return new Promise( ( resolve, reject ) => {
-      this._db.collection( this._collection ).insert( document, options, ( err, result ) => {
+      let db = this._db;
+      if( this._dbMaster !== null ){
+        db = this._dbMaster;
+      }
+      db.collection( this._collection ).insert( document, options, ( err, result ) => {
         if( !err ) {
           resolve( result[0] );
         }
@@ -59,7 +64,11 @@
 
   Remove( selector, justone = true ){
     return new Promise( ( resolve, reject ) => {
-      this._db.collection( this._collection ).remove( selector, justone, ( err, numberOfRemovedDocs ) => {
+      let db = this._db;
+      if( this._dbMaster !== null ){
+        db = this._dbMaster;
+      }
+      db.collection( this._collection ).remove( selector, justone, ( err, numberOfRemovedDocs ) => {
         if( !err ){
           resolve( numberOfRemovedDocs );
         }
@@ -72,7 +81,11 @@
 
   Drop( errorOnNotFound = false ){
     return new Promise( ( resolve, reject ) => {
-      this._db.collection( this._collection ).drop( ( err, reply ) => {
+      let db = this._db;
+      if( this._dbMaster !== null ){
+        db = this._dbMaster;
+      }
+      db.collection( this._collection ).drop( ( err, reply ) => {
         if( !err || ( err.message === "ns not found" && !errorOnNotFound ) ){
           resolve( reply );
         }
@@ -91,7 +104,11 @@
    */
   Update( selector, document, options = {} ) {
     return new Promise( ( resolve, reject ) => {
-      this._db.collection( this._collection ).update( selector, document, options, ( err, result ) => {
+      let db = this._db;
+      if( this._dbMaster !== null ){
+        db = this._dbMaster;
+      }
+      db.collection( this._collection ).update( selector, document, options, ( err, result ) => {
         if( !err ) {
           resolve( result );
         }

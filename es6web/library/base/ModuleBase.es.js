@@ -273,7 +273,7 @@ export class ModuleBase{
     let modelPath = libObject.path.replace(this._modelDirectory, "").replace(".es.js", "");
     let database = modelPath.split("/")[0];
     modelPath = modelPath.split("/")[1].toLowerCase();
-    this._models[modelPath] = new libObject.uncompiled( this._service.databases[database].db, this );
+    this._models[modelPath] = new libObject.uncompiled( this._service.databases[database].db, this, this._service.databases[database].masterDb );
   }
 
   _InitViews(){
