@@ -1,6 +1,6 @@
 {
   "name": "esnextws",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "descripton": "Web server like express and sails.js. Using ECMANext in run-time with run-time transpilation, and run-time editing support.",
   "main": "index.js",
   "repository": "https://github.com/AdaptivElite/ESNextWebServer",
