@@ -23,6 +23,7 @@ export class ContentBuffer{
     this.get = router.get;
     this.post = router.post;
     this._content = "";
+    this.actionMethod = "";
 
     if( this.router.isFile ){
       let extType = this.router.file.substr( this.router.file.lastIndexOf( "." ) + 1 ).toLowerCase();
@@ -73,24 +74,37 @@ export class ContentBuffer{
   }
 
   async RunPage() {
-    let continueRunning = await this._controller.InitControl(this, this._viewHelper);
-    if( continueRunning !== false && !this.response.finished ) {
-      try {
-        await this.module.DoAction(this, this._viewHelper);
-        if (!this.response.finished) {
-          this.Render();
-        }
+    this.viewActionMethod = this.module.GetAction(this);
+    if( typeof( this.viewActionMethod ) === "object" && this.viewActionMethod.error !== undefined ){
+      this.header.code = 500;
+      if (this.connection) {
+        this.connection.SetHeader(this.header);
       }
-      catch( ex ) {
-        this.header.code = 500;
-        if (this.connection) {
-          this.connection.SetHeader(this.header);
-        }
-        this.header.Write(this.response);
-        this.response.end( "500 Error with page '" + ex.message + "'" );
-      }
-
+      this.header.Write(this.response);
+      this.response.end( "500 Error with page '" + JSON.stringify( this.viewActionMethod.error ) + "'" );
     }
+    else{
+      this.isAction = this.viewActionMethod.endsWith( "Action" ) || this.viewActionMethod.endsWith( "Deepaction" );
+      let continueRunning = await this._controller.InitControl(this, this._viewHelper);
+      if( continueRunning !== false && !this.response.finished ) {
+        try {
+          await this._controller[this.viewActionMethod]( this, this._viewHelper );
+          if (!this.response.finished) {
+            this.Render();
+          }
+        }
+        catch( ex ) {
+          this.header.code = 500;
+          if (this.connection) {
+            this.connection.SetHeader(this.header);
+          }
+          this.header.Write(this.response);
+          this.response.end( "500 Error with page '" + ex.message + "'" );
+        }
+
+      }
+    }
+
   }
 
   get controller(){
@@ -124,6 +138,10 @@ export class ContentBuffer{
 
   Write( writeString ){
     this._content += writeString;
+  }
+  
+  SetContent( contentBuffer ){
+    this._content = contentBuffer;
   }
 
   WriteJson( jsonObject ){

@@ -76,7 +76,7 @@ export class ModuleBase{
     let methods = Object.getOwnPropertyNames( controllerClass.prototype );
     for ( let i = 0; i < methods.length; i++ ) {
       let methodName = methods[i];
-      if( methodName[0] !== "_" && methodName.EndsWith( "Action" ) || methodName.EndsWith( "View" ) ){
+      if( methodName[0] !== "_" && methodName.EndsWith( "Action" ) || methodName.EndsWith( "View" ) || methodName.EndsWith( "Deepview" ) || methodName.EndsWith( "Deepaction") ){
         this._methodMap[controllerName][methodName.toLowerCase()] = methodName;
       }
     }
@@ -100,11 +100,21 @@ export class ModuleBase{
     }
     actionName = actionName.toLowerCase().replace( /-/g, "" );
     let methodMap = this._methodMap[controllerName];
-    if( methodMap[actionName + "view"] ){
-      return methodMap[actionName + "view"];
+    if( actionName.indexOf( "/" ) === -1 ){
+      if( methodMap[actionName + "view"] ){
+        return methodMap[actionName + "view"];
+      }
+      if( methodMap[actionName + "action"] ){
+        return methodMap[actionName + "action"];
+      }
     }
-    if( methodMap[actionName + "action"] ){
-      return methodMap[actionName + "action"];
+    else{
+      if( methodMap[actionName.split("/")[0] + "deepview"] ){
+        return methodMap[actionName.split("/")[0] + "deepview"];
+      }
+      if( methodMap[actionName.split("/")[0] + "deepaction"] ){
+        return methodMap[actionName.split("/")[0] + "deepaction"];
+      }
     }
 
     return null;
@@ -115,7 +125,7 @@ export class ModuleBase{
   /**
    * Does the action requested, and fills the content buffer.
    */
-  DoAction( contentBuffer, viewHelper ){
+  GetAction( contentBuffer ){
     let router = contentBuffer.router;
     let controller = contentBuffer.controller;
     let methodName = "";
@@ -142,8 +152,11 @@ export class ModuleBase{
     let error = null;
     if( methodName !== null ){
       controller.SetLayoutTemplate( this.GetLayout( controller.defaultLayout || this._defaultLayout ) );
-      if( methodName.EndsWith( "View" ) ){
+      if( methodName.endsWith( "View" ) || methodName.endsWith( "Deepview" ) ){
         //Must load a view//
+        if( methodName.EndsWith( "Deepview" ) ){
+          actionView = actionView.split( "/" )[0];
+        }
         if( this._views["actions"][controllerName + "/" + actionView] ){
           //Controller action view.
           controller.SetViewTemplate( this._views["actions"][controllerName + "/" + actionView] );
@@ -165,7 +178,7 @@ export class ModuleBase{
               methodName = this.GetMethod( controllerName, controller.errorAction );
             }
             else{
-              error = { code : "404" };
+              error = { code : "404", "message" : "View page not found." };
             }
           }
         }
@@ -180,16 +193,11 @@ export class ModuleBase{
     }
 
     if( error === null ){
-      return controller[methodName]( contentBuffer, viewHelper );
+      return methodName;
     }
     else{
-      console.log( "Error: " );
-      console.log( error );
-
-      return false;
+      return { error : error };
     }
-
-    return false;
 
   }
 
