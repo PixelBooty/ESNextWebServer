@@ -1,13 +1,4 @@
-//Boot prototypes.
-String.prototype.EndsWith = function(suffix) {
-  return this.indexOf(suffix, this.length - suffix.length) !== -1;
-};
-
-String.prototype.StartsWith = function(suffix) {
-  return this.indexOf(suffix) === 0;
-};
-
-GLOBAL.date = function(format, timestamp) {
+global.date = function(format, timestamp) {
   //  discuss at: http://phpjs.org/functions/date/
   // original by: Carlos R. L. Rodrigues (http://www.jsfromhell.com)
   // original by: gettimeofday

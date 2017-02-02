@@ -6,113 +6,58 @@
 
 let qs = require('querystring');
 let multiparty = require( 'multiparty' );
+let httpServer = require( "http" );
+let ServiceManager = dynamic( "./ServiceManager" ).ServiceManager;
+let Router = dynamic( "./Router" ).Router;
+let ConnectionManager = dynamic( "./ConnectionManager" ).ConnectionManager;
+let ContentBuffer = dynamic( "./ContentBuffer" ).ContentBuffer;
+let PostFile = dynamic( "./PostFile" ).PostFile;
 
-export class WebServer{
-  constructor( settings ) {
-    this._serverLibrary = settings.serverLibrary;
-    this._services = settings.services;
-    this._webServer = settings.webServer;
-    this._config = settings.config;
+exports.WebServer = class WebServer extends Object{
+  constructor( config, services ) {
+    super();
+    this._services = services;
+    this.serviceManager = this.serviceManager || null;
+    this.connectionManager = this.connectionManager || null;
+    this._config = config;
+    this._webServer = this._webServer || this._InitWebServer();
     this._hosts = null;
     process.__server = this;
     this._StartServer();
   }
 
+  _InitWebServer(){
+    let webServer = httpServer.createServer( );
+    webServer.listen( this._config.port, this._config.host, null, () => {
+      //TODO user change to config rather then just 1000//
+      if( this._config.gid && process.setgid !== undefined ){
+        process.setgid( 1000 );
+      }
+
+      if( this._config.uid && process.setuid !== undefined ){
+        process.setuid( 1000 );
+      }
+
+      console.log( "Web server started on port " + this._config.port );
+    });
+
+    //TODO Stop and start new server?
+    return webServer;
+  }
+
   _StartServer(){
     this._webServer.on( "request",  this._CompileRequest.bind( this ) );
 
-    let serviceManager = this._serverLibrary.AddLib(
-      "ServiceManager",
-      { webServer : this, serverLibrary : this._serverLibrary, services : this._services },
-      "webserver",
-      ( libObject ) => {
-        this._services = libObject;
-        console.log( "Service manager loaded." );
-      }
-    );
-    if( serviceManager !== null ){
-      this._services = hostManager;
+    if( this.serviceManager == null ){
+      this.serviceManager = new ServiceManager( this, this._services );
     }
-
-    let routeObject = this._serverLibrary.AddLib(
-      "Router",
-      null,
-      "webserver",
-      ( libObject ) => {
-        this._router = libObject;
-      }
-    );
-    if( routeObject !== null ){
-      this._router = routeObject;
+    if( this.connectionManager == null ){
+      this.connectionManager = new ConnectionManager( this );
     }
-
-    let connectionObject = this._serverLibrary.AddLib(
-      "ConnectionManager",
-      { webServer : this },
-      "webserver",
-      ( libObject ) => {
-        this._connection = libObject;
-      }
-    );
-    if( routeObject !== null ){
-      this._router = routeObject;
-    }
-
-    let contentBuffer = this._serverLibrary.AddLib(
-      "ContentBuffer",
-      null,
-      "webserver",
-      ( libObject ) => {
-        this._contentBuffer = libObject;
-      }
-    );
-    if( contentBuffer !== null ){
-      this._contentBuffer = contentBuffer;
-    }
-
-    let postFile = this._serverLibrary.AddLib(
-      "PostFile",
-      null,
-      "webserver",
-      ( libObject ) => {
-        this._postFile = libObject;
-      }
-    );
-    if( postFile !== null ){
-      this._postFile = postFile;
-    }
-
-    this._serverLibrary.AddLib( "ViewHelper", null, "webserver", ( ) => {
-      this._serverLibrary.ForceRecompile( "ContentBuffer", __dirname + "/ContentBuffer" );
-    });
-
-    this._serverLibrary.AddLib( "Connection", null, "webserver", ( ) => {
-      this._serverLibrary.ForceRecompile( "ConnectionManager", __dirname + "/ConnectionManager" );
-    });
-
-    this._serverLibrary.AddLib( "Header", null, "webserver", ( ) => {
-      this._serverLibrary.ForceRecompile( "ContentBuffer", __dirname + "/ContentBuffer" );
-    } );
   }
 
   get database(){
     return this._db;
-  }
-
-  get connection(){
-    return this._connection.compiled;
-  }
-
-  get router(){
-    return this._router.uncompiled;
-  }
-
-  get services(){
-    return this._services.compiled;
-  }
-
-  get contentBuffer(){
-    return this._contentBuffer.uncompiled;
   }
 
   _CompileRequest( request, response ){
@@ -178,7 +123,7 @@ export class WebServer{
                 requestFieldDepth = requestFieldDepth[depthAddition];
                 fieldName = fieldName.substring( depthAddition.length + 1 );
               }
-              requestFieldDepth[fieldName] = new this._postFile.uncompiled( files[file][0] );
+              requestFieldDepth[fieldName] = new PostFile( files[file][0] );
             }
           }
         }
@@ -194,12 +139,11 @@ export class WebServer{
 
   _DoRequest( request, response ){
     this._GenerateCookies( request );
-    let host = this.services.GetHost( request );
-    if( host !== null ){
-      let service = host.service;
-      let router = new this.router( host, request );
-      let config = service.GenerateConfig( host, request, this._config );
-      let contentBuffer = new this.contentBuffer( this, service, host, router, response, config );
+    let service = this.serviceManager.GetHostService( request );
+    if( service !== null ){
+      let router = new Router( service, request );
+      let config = service.GenerateConfig( service, request, this._config );
+      let contentBuffer = new ContentBuffer( this, service, router, response, config );
     }
     else{
       response.end( "Requested host does not exist on this server, Error: 504." );

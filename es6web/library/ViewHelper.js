@@ -1,6 +1,7 @@
 
-export class ViewHelper{
+exports.ViewHelper = class ViewHelper extends Object{
   constructor( module, controller, contentBuffer, serverConfig ){
+    super();
     this.module = module;
     this.controller = controller;
     this.buffer = contentBuffer;
@@ -77,9 +78,9 @@ export class ViewHelper{
     return false;
   }
 
-  _RenderPartial( partialName, viewItems = null, searchLocalModule = true, searchHostSharedModule = true, searchSharedHost = true, searchSharedService = true ){
+  _RenderPartial( partialName, viewItems = null, searchLocalModule = true, searchSharedService = true ){
     let viewModuleRef = {};
-    let partial = this.module.GetPartial( partialName, searchSharedService, searchSharedHost, searchHostSharedModule, searchLocalModule, viewModuleRef );
+    let partial = this.module.GetPartial( partialName, searchSharedService, searchLocalModule, viewModuleRef );
     if( partial !== null ){
       let localModule = this.module;
       this.module = viewModuleRef.ref;

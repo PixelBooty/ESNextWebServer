@@ -1,14 +1,15 @@
-﻿export class MongoEntity{
+﻿exports.MongoEntity = class MongoEntity extends Object{
   constructor(database, module, masterdb = null ) {
+    super();
     this._db = database;
     this._dbMaster = masterdb;
   }
 
-  get _collection(){ }
+  get _collection(){ return null; }
 
   Find( selector = {}, options = {} ) {
     return new Promise( ( resolve, reject ) => {
-      this._db.collection( this._collection ).find( selector, options ).toArray( ( err, results ) => {
+      this._db.collection( this._collection || options.collection ).find( selector, options ).toArray( ( err, results ) => {
         if( !err ) {
           resolve( results );
         }
@@ -21,7 +22,7 @@
 
   Count( selector = {}, options = {} ) {
     return new Promise( ( resolve, reject ) => {
-      this._db.collection( this._collection ).count( selector, options, ( err, count ) => {
+      this._db.collection( this._collection || options.collection ).count( selector, options, ( err, count ) => {
         if( !err ) {
           resolve( count );
         }
@@ -34,7 +35,7 @@
 
   FindOne( selector = null, options = {} ) {
     return new Promise( ( resolve, reject ) => {
-      this._db.collection( this._collection ).findOne( selector, options, ( err, result ) => {
+      this._db.collection( this._collection || options.collection ).findOne( selector, options, ( err, result ) => {
         if( !err ) {
           resolve( result );
         }
@@ -51,7 +52,7 @@
       if( this._dbMaster !== null ){
         db = this._dbMaster;
       }
-      db.collection( this._collection ).insert( document, options, ( err, result ) => {
+      db.collection( this._collection || options.collection ).insert( document, options, ( err, result ) => {
         if( !err ) {
           resolve( result[0] );
         }
@@ -68,7 +69,7 @@
       if( this._dbMaster !== null ){
         db = this._dbMaster;
       }
-      db.collection( this._collection ).remove( selector, justone, ( err, numberOfRemovedDocs ) => {
+      db.collection( this._collection || options.collection ).remove( selector, justone, ( err, numberOfRemovedDocs ) => {
         if( !err ){
           resolve( numberOfRemovedDocs );
         }

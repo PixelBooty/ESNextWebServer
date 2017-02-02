@@ -6,9 +6,10 @@
 let qs = require('querystring');
 let multiparty = require( 'multiparty' );
 
-export class Router{
-  constructor( host, request ) {
-    this._host = host;
+exports.Router = class Router extends Object{
+  constructor( service, request ) {
+    super();
+    this._service = service;
     this._request = request;
     this._url = request.url;
     this._isFile = false;
@@ -98,20 +99,22 @@ export class Router{
     }
 
     let moduleArgument = urlRoute.split( "/" );
+    let moduleName = "site";
     if( moduleArgument.length > 0 ){
-      if( this._host.HasModule( moduleArgument[0] ) ){
-        module = moduleArgument[0];
+      if( this._service.HasModule( moduleArgument[0] ) ){
+        this._module = this._service.GetModule( moduleArgument[0] );
         moduleArgument.splice( 0, 1 );
+        moduleName = moduleArgument[0];
         urlRoute = moduleArgument.join( "/" );
       }
       else{
-        module = this._host.defaultModule;
+        this._module = this._service.siteModule;
       }
 
       actionView = urlRoute;
     }
     else{
-      module = this._host.defaultModule;
+      this._module = this._service.siteModule;
     }
 
     if( urlRoute !== "" ){
@@ -123,15 +126,17 @@ export class Router{
     this._actionView = actionView;
     this._controllerName = controller;
     this._eventName = event;
-    let relFilePath = this._host.GetFile( fileName );
+    let relFilePath = this._module.GetFile( fileName );
+    if( relFilePath === null && this._service.manager.GetSharedService() !== null ){
+      relFilePath = this._service.manager.GetSharedService().GetModule( "site-module" ).GetFile( fileName );
+    }
     if( fileName !== "" && relFilePath !== null ){
       this._isFile = true;
       this._fileName = relFilePath;
     }
     else{
-      this._module = this._host.GetModule( this._moduleName );
       if( this._module === null ){
-        this._routeError.push( { code: 404, message: "Cannot find requested module." } );
+        this._routeError.push( { code: 404, message: "Cannot find requested module " + this._moduleName + "." } );
       }
       else{
         let defaults = this._module.defaultRoutes;
@@ -148,7 +153,7 @@ export class Router{
 
       this._controller = this._module.GetController( this._controllerName );
       if( this._controller === null ){
-        this._routeError.push( { code : 404, message : "Cannot find requested controller." } );
+        this._routeError.push( { code : 404, message : "Cannot find requested controller " + this._controllerName + "." } );
       }
     }
 
@@ -157,7 +162,7 @@ export class Router{
       console.error( "Route has error!" );
     }
 
-    //return this._host.CreateRouting( modual, view, controller, event );
+    //return this._service.CreateRouting( modual, view, controller, event );
   }
 
 }

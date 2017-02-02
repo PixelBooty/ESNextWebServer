@@ -5,7 +5,7 @@
 
 //If not then include our version to allow polyfill on source files.
 
-var serverLibrary = require( "./es6web-es5/start.js" );
+var serverLibrary = require( "./es6web/start.js" );
 module.exports = {
   init : serverLibrary.init
 };

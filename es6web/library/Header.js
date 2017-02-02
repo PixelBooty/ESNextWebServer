@@ -1,11 +1,12 @@
-/* 
+/*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
 
-export class Header{
+exports.Header = class Header extends Object{
   constructor( defaultCode, defaultContentType ){
+    super();
     this.code = defaultCode;
     this.contentType = defaultContentType;
     this.contentLength = null;
@@ -13,7 +14,7 @@ export class Header{
     this._cookies = {};
     this._redirect = "";
   }
-  
+
   Write( response ){
     let headerObject = {};
     if( this._redirect === "" ){
@@ -29,7 +30,7 @@ export class Header{
       headerObject["Access-Control-Allow-Origin"] = "*";
       let cookieOutput = [];
       for( let cookieName in this._cookies ){
-        cookieOutput.push( cookieName + "=" + this._cookies[cookieName] ); 
+        cookieOutput.push( cookieName + "=" + this._cookies[cookieName] );
       }
       if( cookieOutput.length > 0 ){
         headerObject["Set-Cookie"] = cookieOutput.join( ";" );
@@ -40,21 +41,21 @@ export class Header{
     }
     response.writeHead( this.code, headerObject );
   }
-  
+
   SetContentLength( length ){
     this.contentLength = length + "";
   }
-  
+
   Redirect( location ){
     this._isRedirect = true;
     this.code = 302;
     this._redirect = location;
   }
-  
+
   AddCookie( cookieName, cookieValue ){
     this._cookies[cookieName] = cookieValue;
   }
-  
+
   SetMimeType( fileType, fileName ){
     switch( fileType ){
       case "png":

@@ -1,11 +1,12 @@
-import { Connection } from "./Connection.es.js";
+let Connection = dynamic("./Connection").Connection;
 
-export class ConnectionManager{
-  constructor( webserver ){
-    this._server = webserver;
+exports.ConnectionManager = class ConnectionManager extends Object{
+  constructor( webServer ){
+    super();
+    this._server = webServer;
     this._connectionsIndex = {};
   }
-  
+
   GetConnection( request ){
     let connection = null;
     if( !request.cookies.es6coid ){
@@ -13,11 +14,11 @@ export class ConnectionManager{
       this._connectionsIndex[connection.id] = connection;
     }
     else{
-      //|| 
+      //||
       if( request.cookies.es6coid.push ) {
         //TODO check why spoof attempt.... TODOSECURE
         //TODO PRELAUNCH
-        
+
         for( let i = 0; i < request.cookies.es6coid.length; i++ ) {
           if(this._connectionsIndex[request.cookies.es6coid[i]] ) {
             connection = this._connectionsIndex[request.cookies.es6coid[i]];
@@ -35,7 +36,7 @@ export class ConnectionManager{
         connection = new Connection(request);
         this._connectionsIndex[connection.id] = connection;
       }
-      
+
     }
     return connection;
   }

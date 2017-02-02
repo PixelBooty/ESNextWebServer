@@ -4,12 +4,13 @@ let imageSize = require("imagesize");
 /**
  * Helper class in dealing with post request files.
  */
-export class PostFile{
+exports.PostFile = class PostFile extends Object{
   /**
    * Constructor of PostFile
    * @param object fileData - The file data from the post request.
    */
   constructor( fileData ) {
+    super();
     this.type = fileData.headers['content-type'];
     this.rawData = fileData;
   }
@@ -124,7 +125,7 @@ export class PostFile{
     return new Promise((resolve, reject) => {
       extention = extention || this.GetExtention();
       var cbCalled = false;
-    
+
       if (fileName === null) {
         fileName = this.rawData.originalFilename;
       }
@@ -140,7 +141,7 @@ export class PostFile{
         done();
       });
       rd.pipe(wr);
-    
+
       function done(err) {
         if (!cbCalled) {
           if (err) {

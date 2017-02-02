@@ -4,8 +4,9 @@
  */
 
 
-export class ControllerBase{
+exports.ControllerBase = class ControllerBase extends Object{
   constructor( module, router, contentBuffer ){
+    super();
     this._module = module;
     this._router = router;
     this._content = contentBuffer;

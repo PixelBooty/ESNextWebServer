@@ -3,17 +3,17 @@
  * and open the template in the editor.
  */
 
-import { Header } from "./Header.es.js";
-import { ViewHelper } from "./ViewHelper.es.js";
+let Header = dynamic( "./Header" ).Header;
+let ViewHelper = dynamic( "./ViewHelper" ).ViewHelper;
 
 let fs = require( "fs" );
 let less = require( "less" );
 let htmlMinify = require('html-minifier').minify;
 
-export class ContentBuffer{
-  constructor( webserver, service, host, router, response, serviceConfig ) {
+exports.ContentBuffer = class ContentBuffer extends Object{
+  constructor( webserver, service, router, response, serviceConfig ) {
+    super();
     this._server = webserver;
-    this.host = host;
     this.router = router;
     this.service = service;
     this.response = response;
@@ -34,7 +34,7 @@ export class ContentBuffer{
           if( extType === "less" ){
             data = data.toString();
             less.render(data, (e, css) => {
-              this._content = css;
+              this._content = css.css;
               this._ShowContent();
             } );
           }
@@ -52,7 +52,7 @@ export class ContentBuffer{
     else{
 
       if( !router.errors ){
-        this.connection = this._server.connection.GetConnection( router.request );
+        this.connection = this._server.connectionManager.GetConnection( router.request );
         //Modual
         this.module = router.module;
 
@@ -139,7 +139,7 @@ export class ContentBuffer{
   Write( writeString ){
     this._content += writeString;
   }
-  
+
   SetContent( contentBuffer ){
     this._content = contentBuffer;
   }

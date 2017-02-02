@@ -20,65 +20,24 @@ Install
 =======
 `npm install esnextws`
 
-Babel Help
-==========
-You will have to have babel setup in your project with polyfill to run this server.
-If you have never used babel you can following these instructions or visit https://babeljs.io for more details.
-To do this you must include the following npm packages to your project:
-* babel
-* babel-core
-* babel-polyfill
-* babel-preset-es2015
-* babel-preset-stage-# you must have at-least stage-2 to run async methods.
-Then in your package JSON you must have the following lines.
-```
-"babel": {
-  "presets": [
-    "es2015",
-    "stage-#"
-  ]
-}
-```
-
-You must also put the following in your file before you require the npm.
-```
-require("babel-core/register");
-require("babel-polyfill");
-```
-This has been tested with babel 6 only.
-
-Easy Babel Help
+Easy Button Help
 ===============
--1. From your root project folder: 
-```
-npm install babel babel-core babel-polyfill babel-preset-es2015 babel-preset-stage-2
-```
--2. Create a package.json with following.
-```
-"babel": {
-  "presets": [
-    "es2015",
-    "stage-#"
-  ]
-}
-```
--3. Create a service using the Scaffolding 
+-1. Make sure you are using NodeJS 7:
+-2. Create a service using the Scaffolding
 ```
 node node_modules/esnextws/scaffolding
 ```
--4. When prompted enter W for HelloWorld example.
+-3. When prompted enter W for HelloWorld example.
 
--5. Create a script, for instance app.js, with the following code:
+-4. Create a script, for instance app.js, with the following code:
 ```
-require("babel-core/register");
-require("babel-polyfill");
 require( "esnextws" ).init( { port : 8080 }, [ "hello/"] );
 ```
--6. From your console run your script
+-5. From your console run your script, include harmony flag for async; which is required.
 ```
-node app.js
+node --harmony app.js
 ```
-Visit localhost:8080/hello in your browser.
+-6. Visit localhost:8080/hello in your browser.
 
 -7. Look at the wiki for more help with customization of your new server.
 

@@ -53,24 +53,7 @@ export class HostBase{
     return { files, directories };
   }
 
-  get assetDirectory(){
-    return this._assetDirectory;
-  }
-
   SetupHost(){}
-
-  GenerateConfig( request ){
-    let config = {};
-    for( var setting in this._config ){
-      config[setting] = this._config[setting];
-    }
-
-    //Env config
-    for( var setting in this._envConfig[request.env] ){
-      config[setting] = this._envConfig[request.env][setting];
-    }
-    return config;
-  }
 
   _InitModules(){
     this._modualDirectory = this._hostDirectory + "/Modules/";
@@ -99,21 +82,6 @@ export class HostBase{
     this._allowedHosts.push( { hostName, environment, host } );
   }
 
-  CheckHost( requestedHost ){
-    for( let host of this._allowedHosts ){
-      if( typeof( host.hostName ) === "string" ){
-        if( host.hostName === requestedHost ){
-          return host;
-        }
-      }
-      else{
-        // Regex
-      }
-    }
-
-    return null;
-  }
-
   CreateRouting( modual, view, controller, event ){
     console.log( "test" );
   }
@@ -139,82 +107,10 @@ export class HostBase{
     this._modules[path] = moduleObject;
   }
 
-  _InitFileIndex(){
-    this._assetDirectory = this._hostDirectory + "/public/";
-    let watcherlib = this._coreLibrary.AddIndexWatcher( this._assetDirectory, this._OnIndexChange.bind( this ) );
-    if( watcherlib !== null ){
-      this._RebuildFileIndex( watcherlib.indexTree );
-    }
-  }
 
-  _RebuildFileIndex( pathIndex ){
-    this._fileIndex.files = {};
-    this._fileIndex.directories = {};
-    for( let file in pathIndex.files ){
-      this._fileIndex.files[file.toLowerCase()] = file;
-    }
-    for( let dir in pathIndex.directories ){
-      this._fileIndex.directories[dir.toLowerCase()] = dir;
-    }
-  }
 
-  _OnIndexChange( indexWatchObject, type, event, path, dirPath, hash ){
-    if( event === "add" ){
-      if( type === "file" ){
-        this._fileIndex.files[( dirPath + path ).toLowerCase()] = dirPath + path;
-      }
-      else{
-        this._fileIndex.directories[path.toLowerCase()] = path;
-      }
+  
 
-    }
-    else if( event === "change" ){
-      if( type === "file" ){
-        this._fileIndex.files[( dirPath + path ).toLowerCase()] = dirPath + path;
-      }
-    }
-    else if ( event === "remove" ){
-      if( type === "file" ){
-        console.log( "remove file from index" );
-      }
-      else{
-        console.log( "remove directory from index" );
-      }
-    }
-  }
 
-  GetFile( fileName ){
-    if( fileName == "" ) {
-      return null;
-    }
-    if( this._fileIndex.files[this._assetDirectory.toLowerCase() + fileName] !== undefined ) {
-      return this._fileIndex.files[this._assetDirectory.toLowerCase() + fileName] || null;
-    }
-    else {
-      if (!this._sharedHost) {
-        let sharedHost = this._service.PullHost("shared");
-        if (sharedHost) {
-          let sharedFile = this._service.PullHost("shared").GetFile(fileName);
-          if (sharedFile !== null) {
-            return sharedFile;
-          }
-          else {
-            let sharedService = this._service.manager.GetSharedService();
-            if( sharedService != null ) {
-              let sharedServiceHost = sharedService.PullHost("shared");
-              if( sharedServiceHost ) {
-                sharedFile = sharedServiceHost.GetFile(fileName);
-              }
-              if (sharedFile !== null) {
-                return sharedFile;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    return null;
-  }
 
 }

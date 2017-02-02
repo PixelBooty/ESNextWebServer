@@ -1,5 +1,6 @@
-﻿export class MassiveEntity{
+﻿exports.MassiveEntity = class MassiveEntity extends Object{
   constructor( database, module) {
+    super();
     this._db = database;
     this._AssureCollection();
   }
@@ -23,7 +24,7 @@
       else if( this.type == "sql" ) {
         let creationMap = [];
         for( let field in this.sqlStructure ) {
-          creationMap.push( field + " " + this.sqlStructure[field] ); 
+          creationMap.push( field + " " + this.sqlStructure[field] );
         }
         this._db.run( "CREATE TABLE " + this._document + " ( id SERIAL PRIMARY KEY, " + creationMap.join( "," ) + " );" );
       }
@@ -38,7 +39,7 @@
     return new Promise((resolve, reject) => {
       if (this.type == "json") {
         if (Object.keys(selector).length == 0) {
-        
+
         }
         else {
           this._db[this._document].findDoc(selector, options).toArray((err, results) => {
