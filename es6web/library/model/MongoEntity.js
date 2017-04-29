@@ -3,15 +3,41 @@
     super();
     this._db = database;
     this._dbMaster = masterdb;
+    this._consturctedClass = {};
+    this._SetupConstructedClass();
   }
+
+  _SetupConstructedClass(){
+    let methods = Object.getOwnPropertyNames( Object.getPrototypeOf(this) );
+    let coreMethods = Object.getOwnPropertyNames( MongoEntity.prototype );
+    for( let i = 0; i < methods.length; i++ ){
+      if( coreMethods.indexOf(methods[i]) === -1 && !methods[i].toLowerCase().endsWith("model") ){
+        this._consturctedClass[methods[i]] = this[methods[i]];
+      }
+    }
+
+    this._consturctedClass.GetCollection = () => this;
+  }
+
+  get defaultProjection(){ return null; }
+
+  get defaultSelection(){ return null; }
+
+  get projections(){ return {}; }
+
+  get selections(){ return {}; }
 
   get _collection(){ return null; }
 
   Find( selector = {}, options = {} ) {
     return new Promise( ( resolve, reject ) => {
-      this._db.collection( this._collection || options.collection ).find( selector, options ).toArray( ( err, results ) => {
+      let projection = {};
+      if( options.projection !== undefined ){
+        projection = options.projection;
+      }
+      this._db.collection( this._collection || options.collection ).find( selector, projection, options ).toArray( ( err, results ) => {
         if( !err ) {
-          resolve( results );
+          resolve( results.map( (result) => Object.assign( result, this._consturctedClass ) ) );
         }
         else {
           reject( err );
@@ -22,7 +48,11 @@
 
   Count( selector = {}, options = {} ) {
     return new Promise( ( resolve, reject ) => {
-      this._db.collection( this._collection || options.collection ).count( selector, options, ( err, count ) => {
+      let projection = {};
+      if( options.projection !== undefined ){
+        projection = options.projection;
+      }
+      this._db.collection( this._collection || options.collection ).count( selector, projection, options, ( err, count ) => {
         if( !err ) {
           resolve( count );
         }
@@ -35,9 +65,16 @@
 
   FindOne( selector = null, options = {} ) {
     return new Promise( ( resolve, reject ) => {
-      this._db.collection( this._collection || options.collection ).findOne( selector, options, ( err, result ) => {
+      let projection = {};
+      if( options.projection !== undefined ){
+        projection = options.projection;
+      }
+      this._db.collection( this._collection || options.collection ).findOne( selector, projection, options, ( err, result ) => {
         if( !err ) {
-          resolve( result );
+          if( result === null ){
+            return null;
+          }
+          resolve( Object.assign( result, this._consturctedClass ) );
         }
         else {
           reject( err );
@@ -54,7 +91,7 @@
       }
       db.collection( this._collection || options.collection ).insert( document, options, ( err, result ) => {
         if( !err ) {
-          resolve( result[0] );
+          resolve( Object.assign( result.ops[0], this._consturctedClass ) );
         }
         else {
           reject( err );

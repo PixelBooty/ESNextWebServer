@@ -18,7 +18,19 @@ exports.Router = class Router extends Object{
     let queryPoint = this._url.indexOf( "?" );
     if( queryPoint !== -1 ){
       this._url = request.url.substring( 0, queryPoint ).replace( /\/\//gi, "/" );
-      this.get = qs.parse( request.url.substring( queryPoint + 1 ) );
+      let queryString = request.url.substring( queryPoint + 1 ).trim();
+      if( decodeURI( queryString ).startsWith( "{" ) ){
+        try{
+          this.get = JSON.parse( decodeURI( queryString ) );
+        }
+        catch( ex ){
+          this.get = {};
+        }
+      }
+      else{
+        this.get = qs.parse( queryString );
+      }
+
     }
     else{
       this.get = {};

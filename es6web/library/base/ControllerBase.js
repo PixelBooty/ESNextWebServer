@@ -31,12 +31,16 @@ exports.ControllerBase = class ControllerBase extends Object{
 
   InitControl(){}
 
-  SetViewTemplate( viewTemplate ){
-    this._viewTemplate = viewTemplate;
+  SetViewTemplate( viewTemplate, viewType = "views" ){
+    this._viewTemplate = this.module.GetViewByType( viewTemplate, viewType );
+  }
+
+  SetActionTemplate( actionTemplate ){
+    this.SetViewTemplate( actionTemplate, "actions" );
   }
 
   SetLayoutTemplate( layoutTemplate ){
-    this._layoutTemplate = layoutTemplate;
+    this._layoutTemplate = this.module.GetLayout( layoutTemplate );
   }
 
   get view(){

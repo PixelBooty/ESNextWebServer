@@ -83,7 +83,7 @@ exports.ServiceBase = class ServiceBase extends Object{
   async InitalizeService() {
     await this._SetupService();
     if( this._isSharedService ){
-      console.log( this._path + " is set as a shared service." );
+      console.info( this._path + " is set as a shared service." );
       this._serviceManager.SetSharedService( this );
     }
     this._siteModule = this._siteModule || new SiteModule( this, this._path );
@@ -92,7 +92,11 @@ exports.ServiceBase = class ServiceBase extends Object{
   }
 
   get manager() {
-  return this._serviceManager;
+    return this._serviceManager;
+  }
+
+  get modules(){
+    return this._modules;
   }
 
   get path(){

@@ -41,6 +41,10 @@ exports.ModuleBase = class ModuleBase extends Object{
     this._InitViews();
   }
 
+  get path(){
+    return this._path;
+  }
+
   _LoadAdditionalFiles( filePath ){
     //@todo this needs to be done with the updates to the dynamic loader.
     var walk = function(dir, done) {
@@ -188,18 +192,17 @@ exports.ModuleBase = class ModuleBase extends Object{
 
   GetLibrary( libraryName ){
     let lib = null;
-    if( this._libraries[libraryName.toLowerCase()] !== undefined ){
-      lib = this._libraries[libraryName.toLowerCase()];
+    if( this._libraries[libraryName] !== undefined ){
+      lib = this._libraries[libraryName];
     }
 
     if( lib === null ){
       this.AddLibrary( libraryName );
-      if( this._libraries[libraryName.toLowerCase()] !== undefined ){
-        lib = this._libraries[libraryName.toLowerCase()];
+      if( this._libraries[libraryName] !== undefined ){
+        lib = this._libraries[libraryName];
       }
     }
-
-
+    
     return lib;
 
   }
@@ -207,7 +210,19 @@ exports.ModuleBase = class ModuleBase extends Object{
   AddLibrary( libraryName, compiledSettings = null ){
     return new Promise( ( resolve, reject ) => {
       let libPath = path.resolve( this._path + "/Library/" + libraryName );
-      this._libraries[libraryName.toLowerCase()] = dynamic( libPath )[libraryName];
+      try{
+        this._libraries[libraryName] = dynamic( libPath )[libraryName];
+      }
+      catch( ex ){
+        try{
+          this._libraries[libraryName] = superDynamic( libPath + "Super" )[libraryName + "Super"];
+        }
+        catch( ex ){
+          console.error( "Could not find library " + libraryName + " or " + libraryName + "Super" );
+          console.log( ex );
+        }
+      }
+
     });
   }
 
@@ -241,11 +256,14 @@ exports.ModuleBase = class ModuleBase extends Object{
   }
 
   GetMethod(controllerName, actionName) {
+    let methodMap = this._methodMap[controllerName];
     if( actionName === null ) {
+      if( methodMap["globaldeepview"] || methodMap["globaldeepaction"] ){
+        return methodMap["globaldeepview"] || methodMap["globaldeepaction"];
+      }
       return null;
     }
     actionName = actionName.toLowerCase().replace( /-/g, "" );
-    let methodMap = this._methodMap[controllerName];
     if( actionName.indexOf( "/" ) === -1 ){
       if( methodMap[actionName + "view"] ){
         return methodMap[actionName + "view"];
@@ -260,6 +278,9 @@ exports.ModuleBase = class ModuleBase extends Object{
       }
       if( methodMap[actionName.split("/")[0] + "deepaction"] ){
         return methodMap[actionName.split("/")[0] + "deepaction"];
+      }
+      if( methodMap["globaldeepview"] ){
+        return methodMap["globaldeepview"];
       }
     }
 
@@ -297,27 +318,30 @@ exports.ModuleBase = class ModuleBase extends Object{
     }
     let error = null;
     if( methodName !== null ){
-      controller.SetLayoutTemplate( this.GetLayout( controller.defaultLayout || this._defaultLayout ) );
       if( methodName.endsWith( "View" ) || methodName.endsWith( "Deepview" ) ){
+        controller.SetLayoutTemplate( controller.defaultLayout || this._defaultLayout );
         //Must load a view//
+        if( methodName.endsWith( "GlobalDeepView" ) ){
+          actionView = "global";
+        }
         if( methodName.endsWith( "Deepview" ) ){
           actionView = actionView.split( "/" )[0];
         }
         if( this._views["actions"][controllerName + "/" + actionView] ){
           //Controller action view.
-          controller.SetViewTemplate( this._views["actions"][controllerName + "/" + actionView] );
+          controller.SetViewTemplate( controllerName + "/" + actionView, "actions" );
         }
         else if( this._views["views"][actionView] ){
           //Just a view.
-          controller.SetViewTemplate( this._views["views"][actionView] );
+          controller.SetViewTemplate( actionView, "views" );
         }
         else{
           if( actionView === "" && defaultActionView && this._views["actions"][controllerName + "/" + defaultActionView] ){
-            controller.SetViewTemplate( this._views["actions"][controllerName + "/" + defaultActionView] );
+            controller.SetViewTemplate( controllerName + "/" + defaultActionView, "actions" );
           }
           else if( actionView === "" && defaultView && this._views["views"][defaultView] ){
             //Just a view.
-            controller.SetViewTemplate( this._views["views"][defaultView] );
+            controller.SetViewTemplate( defaultView, "views" );
           }
           else{
             if( controller.errorAction !== undefined ){

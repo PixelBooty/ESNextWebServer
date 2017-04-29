@@ -19,6 +19,31 @@ exports.ServiceManager = class ServiceManager extends Object{
     for( let service in this._serviceList ){
       this.AddService( service );
     }
+
+    global.wsmservice = ( caller = null ) => {
+      caller = caller || dynamicCaller();
+      for( let serviceName in this._services ){
+        if( caller.indexOf( path.resolve( serviceName ) ) == 0 ){
+          return this._services[serviceName];
+        }
+      }
+    };
+
+    global.wsmmodule = ( caller = null ) => {
+      caller = caller || dynamicCaller();
+      let service = wsmservice( caller );
+      for( let moduleName in service.modules ){
+        if( caller.indexOf( path.resolve( service.modules[moduleName].path ) ) == 0 ){
+          return service.modules[moduleName];
+        }
+      }
+    };
+
+    global.wsmlibrary = ( libraryName, caller = null ) => {
+      caller = caller || dynamicCaller();
+      let module = wsmmodule( caller );
+      return module.GetLibrary( libraryName );
+    };
   }
 
   TrackHost( hostName, service ){
