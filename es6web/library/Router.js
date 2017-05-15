@@ -15,6 +15,8 @@ exports.Router = class Router extends Object{
     this._isFile = false;
     this._fileName = "";
     this._routeError = [];
+    this.headers = request.headers;
+    this.method = request.method.toLowerCase();
     let queryPoint = this._url.indexOf( "?" );
     if( queryPoint !== -1 ){
       this._url = request.url.substring( 0, queryPoint ).replace( /\/\//gi, "/" );
@@ -37,6 +39,8 @@ exports.Router = class Router extends Object{
     }
 
     this.post = request.post;
+
+    this.requestData = Object.assign( this.get, this.post );
     this._BuildRoute();
   }
 

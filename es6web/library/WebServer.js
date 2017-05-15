@@ -63,7 +63,7 @@ exports.WebServer = class WebServer extends Object{
   _CompileRequest( request, response ){
     request.ssl = false;
     request.post = {};
-    if( request.method === "POST") {
+    if( request.method !== "GET") {
       request.postBody = "";
       request.on( 'data', ( data ) => {
         //Check to make sure they are not 6 gigs in post.

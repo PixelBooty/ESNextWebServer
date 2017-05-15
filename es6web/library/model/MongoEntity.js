@@ -1,9 +1,15 @@
 ﻿exports.MongoEntity = class MongoEntity extends Object{
   constructor(database, module, masterdb = null ) {
     super();
+    this.module = module;
     this._db = database;
     this._dbMaster = masterdb;
-    this._consturctedClass = {};
+    this._consturctedClass = {
+      Save : async function(){
+        await this.GetCollection().Save( this );
+      },
+      GetCollection : () => this
+    };
     this._SetupConstructedClass();
   }
 
@@ -15,8 +21,18 @@
         this._consturctedClass[methods[i]] = this[methods[i]];
       }
     }
+  }
 
-    this._consturctedClass.GetCollection = () => this;
+  async OnSave( item ){
+
+  }
+
+  async OnInsert( item ){
+
+  }
+
+  async OnRemove( selector, justone ){
+
   }
 
   get defaultProjection(){ return null; }
@@ -72,9 +88,11 @@
       this._db.collection( this._collection || options.collection ).findOne( selector, projection, options, ( err, result ) => {
         if( !err ) {
           if( result === null ){
-            return null;
+            resolve( null );
           }
-          resolve( Object.assign( result, this._consturctedClass ) );
+          else{
+            resolve( Object.assign( result, this._consturctedClass ) );
+          }
         }
         else {
           reject( err );
@@ -84,11 +102,13 @@
   }
 
   Insert( document, options = {} ) {
-    return new Promise( ( resolve, reject ) => {
+    return new Promise( async ( resolve, reject ) => {
       let db = this._db;
       if( this._dbMaster !== null ){
         db = this._dbMaster;
       }
+      await this.OnSave( document );
+      await this.OnInsert( document );
       db.collection( this._collection || options.collection ).insert( document, options, ( err, result ) => {
         if( !err ) {
           resolve( Object.assign( result.ops[0], this._consturctedClass ) );
@@ -101,11 +121,12 @@
   }
 
   Remove( selector, justone = true ){
-    return new Promise( ( resolve, reject ) => {
+    return new Promise( async ( resolve, reject ) => {
       let db = this._db;
       if( this._dbMaster !== null ){
         db = this._dbMaster;
       }
+      await this.OnRemove( selector, justone );
       db.collection( this._collection || options.collection ).remove( selector, justone, ( err, numberOfRemovedDocs ) => {
         if( !err ){
           resolve( numberOfRemovedDocs );
@@ -147,6 +168,24 @@
         db = this._dbMaster;
       }
       db.collection( this._collection ).update( selector, document, options, ( err, result ) => {
+        if( !err ) {
+          resolve( result );
+        }
+        else {
+          reject(err);
+        }
+      });
+    } );
+  }
+
+  Save( item, options = {} ){
+    return new Promise( async ( resolve, reject ) => {
+      let db = this._db;
+      if( this._dbMaster !== null ){
+        db = this._dbMaster;
+      }
+      await this.OnSave( item );
+      db.collection( this._collection ).update( { _id : item._id }, item, options, ( err, result ) => {
         if( !err ) {
           resolve( result );
         }

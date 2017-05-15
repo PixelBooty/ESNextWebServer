@@ -202,7 +202,7 @@ exports.ModuleBase = class ModuleBase extends Object{
         lib = this._libraries[libraryName];
       }
     }
-    
+
     return lib;
 
   }

@@ -22,6 +22,7 @@ exports.ContentBuffer = class ContentBuffer extends Object{
     this.connection = null;
     this.get = router.get;
     this.post = router.post;
+    this.requestData = router.requestData;
     this._content = "";
     this.actionMethod = "";
 
