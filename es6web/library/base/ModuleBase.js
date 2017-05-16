@@ -45,6 +45,15 @@ exports.ModuleBase = class ModuleBase extends Object{
     return this._path;
   }
 
+  SetDefaults( defaultController, defaultAction, defaultView, defaultActionView, defaultEvent, defaultLayout ){
+    this._defaultController = defaultController;
+    this._defaultAction = defaultAction;
+    this._defaultView = defaultView;
+    this._defaultActionView = defaultActionView;
+    this._defaultEvent = defaultEvent;
+    this._defaultLayout = defaultLayout;
+  }
+
   _LoadAdditionalFiles( filePath ){
     //@todo this needs to be done with the updates to the dynamic loader.
     var walk = function(dir, done) {
