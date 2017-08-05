@@ -6,6 +6,7 @@
 let fs = require( "fs" );
 let ejs = require( "ejs" );
 let path = require( "path" );
+const etag = require('etag');
 
 exports.ModuleBase = class ModuleBase extends Object{
   constructor( service, moduleDirectory ){
@@ -110,41 +111,89 @@ exports.ModuleBase = class ModuleBase extends Object{
     this._RebuildFileIndex( staticFiles );
   }
 
+  _SetFileWatch( dirPath ){
+    let renameFrom = null;
+
+    this._watchIndex[dirPath.toLowerCase()] = fs.watch( this.assetDirectory + "/" + dirPath, ( event, file ) => {
+      
+      let reactor = dirPath.toLowerCase() + "/" + file.toLowerCase() + "-" + event;
+      
+      /*if( event === "rename" ){
+        if( renameFrom === null ){
+          renameFrom = file;
+        }
+        else{
+          //Finish rename, remove, and create logic//
+          if( renameFrom === "." && file === "." ){
+            //Ignore
+          }
+          else if( renameFrom !== "." && file === "." ){
+            console.log( "Removed " + renameFrom );
+          }
+          else if( renameFrom === "." && file !== "." ){
+            console.log( "Created " + file );
+          }
+          else{
+            console.log( "Rename " + renameFrom + " to " + file );
+          }
+          
+          renameFrom = null;
+        }
+      }
+      else{*/
+        if( this._fileReactor[reactor] !== undefined ){
+          clearTimeout( this._fileReactor[reactor] );
+          delete this._fileReactor[reactor];
+        }
+        this._fileReactor[reactor] = setTimeout( () => {
+          this._TriggerFileRebuild( dirPath + "/" + file );
+          clearTimeout( this._fileReactor[reactor] );
+          delete this._fileReactor[reactor];
+        }, 50 );
+     // }
+    } );
+  }
+
+  _TriggerFileRebuild( filePath ){
+    if( filePath.startsWith( "./" ) ){
+      filePath = filePath.substr( 2 );
+    }
+    if( this._fileIndex.files[filePath.toLowerCase()] === undefined ){
+      //console.log( "Created " + filePath );
+      this._fileIndex.files[filePath.toLowerCase()] = { fileName : this.assetDirectory + "/" + filePath, eTag : "", modDate : "", memCache : null };
+    }
+    fs.readFile( this.assetDirectory + "/" + filePath, ( err, data ) => {
+      if( !err ){
+        //console.log( "Modified " + filePath );
+        this._fileIndex.files[filePath.toLowerCase()].eTag = etag(data);
+      }
+      else{
+        //console.log( "Removed " + filePath );
+        delete this._fileIndex.files[filePath.toLowerCase()];
+      }
+    } );
+    this._fileIndex.files[filePath.toLowerCase()]
+  }
+
   _RebuildFileIndex( fileArray ){
+    this._fileReactor = {};
+    this._watchIndex = this._watchIndex || {};
     this._fileIndex.files = {};
     this._fileIndex.directories = {};
     for( let i = 0; i < fileArray.length; i++ ){
-      this._fileIndex.files[fileArray[i].toLowerCase()] = fileArray[i];
+      this._fileIndex.files[fileArray[i].toLowerCase()] = { fileName : this.assetDirectory + "/" + fileArray[i], eTag : "", modDate : "", memCache : null };
+      this._TriggerFileRebuild( fileArray[i] );
+      let directory = path.dirname(fileArray[i]);
+      if( this._fileIndex.directories[directory.toLowerCase()] === undefined ){
+        this._fileIndex.directories[directory.toLowerCase()] = { dirPath : directory };
+      }
     }
-    //@TODO add a default view for public file directory reads when allowed by config.
-    //for( let dir in pathIndex.directories ){
-    //  this._fileIndex.directories[dir.toLowerCase()] = dir;
-    //}
-  }
 
-  //@TODO once folder watching system is in place.
-  _OnIndexChange( indexWatchObject, type, event, path, dirPath, hash ){
-    if( event === "add" ){
-      if( type === "file" ){
-        this._fileIndex.files[( dirPath + path ).toLowerCase()] = dirPath + path;
+    for( let dir in this._fileIndex.directories ){
+      if( this._watchIndex[dir] !== undefined ){
+        this._watchIndex[dir].close();
       }
-      else{
-        this._fileIndex.directories[path.toLowerCase()] = path;
-      }
-
-    }
-    else if( event === "change" ){
-      if( type === "file" ){
-        this._fileIndex.files[( dirPath + path ).toLowerCase()] = dirPath + path;
-      }
-    }
-    else if ( event === "remove" ){
-      if( type === "file" ){
-        console.log( "remove file from index" );
-      }
-      else{
-        console.log( "remove directory from index" );
-      }
+      this._SetFileWatch( this._fileIndex.directories[dir].dirPath );
     }
   }
 
@@ -193,7 +242,7 @@ exports.ModuleBase = class ModuleBase extends Object{
       return null;
     }
     if( this._fileIndex.files[fileName.toLowerCase()] !== undefined ) {
-      return this.assetDirectory + "/" + this._fileIndex.files[fileName] || null;
+      return this._fileIndex.files[fileName] || null;
     }
 
     return null;

@@ -13,7 +13,7 @@ exports.Router = class Router extends Object{
     this._request = request;
     this._url = request.url;
     this._isFile = false;
-    this._fileName = "";
+    this._fileData = null;
     this._routeError = [];
     this.headers = request.headers;
     this.method = request.method.toLowerCase();
@@ -49,7 +49,7 @@ exports.Router = class Router extends Object{
   }
 
   get file(){
-    return this._fileName;
+    return this._fileData;
   }
 
   get module(){
@@ -142,13 +142,13 @@ exports.Router = class Router extends Object{
     this._actionView = actionView;
     this._controllerName = controller;
     this._eventName = event;
-    let relFilePath = this._module.GetFile( fileName );
-    if( relFilePath === null && this._service.manager.GetSharedService() !== null ){
-      relFilePath = this._service.manager.GetSharedService().GetModule( "site-module" ).GetFile( fileName );
+    let realFile = this._module.GetFile( fileName );
+    if( realFile === null && this._service.manager.GetSharedService() !== null ){
+      realFile = this._service.manager.GetSharedService().GetModule( "site-module" ).GetFile( fileName );
     }
-    if( fileName !== "" && relFilePath !== null ){
+    if( fileName !== "" && realFile !== null ){
       this._isFile = true;
-      this._fileName = relFilePath;
+      this._fileData = realFile;
     }
     else{
       if( this._module === null ){

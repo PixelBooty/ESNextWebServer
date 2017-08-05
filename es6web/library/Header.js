@@ -56,25 +56,25 @@ exports.Header = class Header extends Object{
     this._cookies[cookieName] = cookieValue;
   }
 
+  SetETag( eTag ){
+    this.headerAddons["ETag"] = eTag;
+  }
+
   SetMimeType( fileType, fileName ){
     switch( fileType ){
       case "png":
         this.contentType = "image/png";
-        this.headerAddons["Cache-Control"] = "public, max-age=31536000";
         break;
       case "js":
         this.contentType = "text/javascript";
-        this.headerAddons["Cache-Control"] = "public, max-age=31536000";
         break;
       case "less":
       case "css":
         this.contentType = "text/css";
-        this.headerAddons["Cache-Control"] = "public, max-age=31536000";
         break;
       case "jpg":
       case "jpeg":
         this.contentType = "image/jpg";
-        this.headerAddons["Cache-Control"] = "public, max-age=31536000";
         break;
       default:
         this.contentType = "application/octet-stream";

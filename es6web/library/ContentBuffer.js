@@ -27,28 +27,35 @@ exports.ContentBuffer = class ContentBuffer extends Object{
     this.actionMethod = "";
 
     if( this.router.isFile ){
-      let extType = this.router.file.substr( this.router.file.lastIndexOf( "." ) + 1 ).toLowerCase();
-      this.header.SetMimeType( extType, this.router.file );
-      //Load and send file.
-      fs.readFile( this.router.file, {}, ( error, data ) => {
-        if( !error ){
-          if( extType === "less" ){
-            data = data.toString();
-            less.render(data, (e, css) => {
-              this._content = css.css;
+      let extType = this.router.file.fileName.substr( this.router.file.fileName.lastIndexOf( "." ) + 1 ).toLowerCase();
+      this.header.SetMimeType( extType, this.router.file.fileName );
+      if( this.router.request.headers["if-none-match"] === this.router.file.eTag ){
+        this.header.code = 304;
+        this._ShowContent();
+      }
+      else{
+        //Load and send file.
+        fs.readFile( this.router.file.fileName, {}, ( error, data ) => {
+          if( !error ){
+            this.header.SetETag( this.router.file.eTag );
+            if( extType === "less" ){
+              data = data.toString();
+              less.render(data, (e, css) => {
+                this._content = css.css;
+                this._ShowContent();
+              } );
+            }
+            else{
+              this._content = data;
               this._ShowContent();
-            } );
+            }
           }
           else{
-            this._content = data;
+            this._content = "500 file error " + error;
             this._ShowContent();
           }
-        }
-        else{
-          this._content = "500 file error " + error;
-          this._ShowContent();
-        }
-      } );
+        } );
+      }
     }
     else{
 
