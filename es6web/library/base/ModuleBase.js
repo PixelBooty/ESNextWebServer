@@ -113,7 +113,6 @@ exports.ModuleBase = class ModuleBase extends Object{
 
   _SetFileWatch( dirPath ){
     let renameFrom = null;
-
     this._watchIndex[dirPath.toLowerCase()] = fs.watch( this.assetDirectory + "/" + dirPath, ( event, file ) => {
       
       let reactor = dirPath.toLowerCase() + "/" + file.toLowerCase() + "-" + event;

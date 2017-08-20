@@ -8,6 +8,9 @@
       Save : async function(){
         await this.GetCollection().Save( this );
       },
+      Delete : async function(){
+        await this.GetCollection().Delete( this );
+      },
       GetCollection : () => this
     };
     this._SetupConstructedClass();
@@ -24,6 +27,10 @@
   }
 
   async OnSave( item ){
+
+  }
+
+  async OnDelete( item ){
 
   }
 
@@ -178,6 +185,11 @@
     } );
   }
 
+  async Delete( item, options = {} ){
+    await this.OnDelete( item );
+    await this.Remove( { _id : item._id }, true );
+  }
+
   Save( item, options = {} ){
     return new Promise( async ( resolve, reject ) => {
       let db = this._db;
@@ -185,7 +197,7 @@
         db = this._dbMaster;
       }
       await this.OnSave( item );
-      db.collection( this._collection ).update( { _id : item._id }, item, options, ( err, result ) => {
+      db.collection( this._collection ).update( { _id : item._id }, { $set : item }, options, ( err, result ) => {
         if( !err ) {
           resolve( result );
         }
