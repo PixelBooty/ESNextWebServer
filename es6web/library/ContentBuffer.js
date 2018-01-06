@@ -25,6 +25,8 @@ exports.ContentBuffer = class ContentBuffer extends Object{
     this.requestData = router.requestData;
     this._content = "";
     this.actionMethod = "";
+    this.method = router.method;
+    this.uri = router.request.url;
 
     if( this.router.isFile ){
       let extType = this.router.file.fileName.substr( this.router.file.fileName.lastIndexOf( "." ) + 1 ).toLowerCase();

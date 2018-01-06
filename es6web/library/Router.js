@@ -9,6 +9,7 @@ let multiparty = require( 'multiparty' );
 exports.Router = class Router extends Object{
   constructor( service, request ) {
     super();
+    
     this._service = service;
     this._request = request;
     this._url = request.url;

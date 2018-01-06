@@ -60,12 +60,16 @@ exports.Header = class Header extends Object{
     this.headerAddons["ETag"] = eTag;
   }
 
-  SetMimeType( fileType, fileName ){
+  SetMimeType( fileType, fileName = "" ){
     switch( fileType ){
+      case "json":
+        this.contentType = "application/json";
+        break;
       case "png":
         this.contentType = "image/png";
         break;
       case "js":
+      case "javascript":
         this.contentType = "text/javascript";
         break;
       case "less":

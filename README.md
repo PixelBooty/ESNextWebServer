@@ -22,7 +22,7 @@ Install
 
 Easy Button Help
 ===============
--1. Make sure you are using NodeJS 7:
+-1. Make sure you are using at least NodeJS version 8:
 -2. Create a service using the Scaffolding
 ```
 node node_modules/esnextws/scaffolding
@@ -35,7 +35,7 @@ require( "esnextws" ).init( { port : 8080 }, [ "hello/"] );
 ```
 -5. From your console run your script, include harmony flag for async; which is required.
 ```
-node --harmony app.js
+node app.js
 ```
 -6. Visit localhost:8080/hello in your browser.
 
