@@ -51,7 +51,7 @@ exports.ServiceManager = class ServiceManager extends Object{
       this._hosts[hostName] = service;
     }
     else{
-      console.warn( "Host " + hostName + " is already tracked to " + this._hosts[hostName] + " and cannot be added to tracking for " + servicePath.path );
+      console.warn( "Host " + hostName + " is already tracked to " + this._hosts[hostName] + " and cannot be added to tracking for " + service.path );
     }
   }
 

@@ -19,10 +19,12 @@ exports.ContentBuffer = class ContentBuffer extends Object{
     this.response = response;
     this.header = new Header( 200, "text/html" );
     this._controller = null;
+    this._api = null;
     this.connection = null;
     this.get = router.get;
     this.post = router.post;
     this.requestData = router.requestData;
+    this.params = router.params;
     this._content = "";
     this.actionMethod = "";
     this.method = router.method;
@@ -69,11 +71,21 @@ exports.ContentBuffer = class ContentBuffer extends Object{
         //Controller events/view/action
 
         this.module.BindEvents( this );
-        this._controller = new this.router.controller( this.module, this.router, this );
-        this._viewHelper = new ViewHelper( this.module, this._controller, this, serviceConfig );
-        let timeout = this.module.timeout || 1000;
-        this._viewControlTimeout = setTimeout(this._ViewControlTimeoutMethod.bind(this), timeout);
-        this.RunPage();
+
+        if( this.router.controller ){
+          this._controller = new this.router.controller( this.module, this.router, this );
+          this._viewHelper = new ViewHelper( this.module, this._controller, this, serviceConfig );
+          let timeout = this.module.timeout || 1000;
+          this._viewControlTimeout = setTimeout(this._ViewControlTimeoutMethod.bind(this), timeout);
+          this.RunPage();
+        }
+        else if( this.router.api ){
+          this._api = new this.router.api( this.module, this.router, this );
+          let timeout = this.module.timeout || 1000;
+          this._viewControlTimeout = setTimeout(this._ViewControlTimeoutMethod.bind(this), timeout);
+          this.RunApi();
+        }
+        
       }
       else{
         this._content = "504 route error, this has been recorded in the log."
@@ -81,6 +93,62 @@ exports.ContentBuffer = class ContentBuffer extends Object{
         this._ShowContent();
       }
     }
+  }
+
+  ParamList( paramNames ){
+    let object = {};
+    paramNames.forEach( ( x, index ) => object[x] = this.params[index] );
+    return object;
+  }
+
+  async RunApi(){
+    let method = this.router.method;
+    this.header.contentType = "application/json";
+    let executionMethod = null;
+    await this._api.InitApi(this);
+    switch( method ){
+      case "get":
+        if( this.params ){
+          executionMethod = "GetById";
+        }
+        else{
+          executionMethod = "Get";
+        }
+        break;
+      case "post":
+        executionMethod = "Post";
+        break;
+      case "patch":
+        executionMethod = "Patch";
+        break;
+      case "put":
+        executionMethod = "Put";
+        break;
+      case "delete":
+        executionMethod = "Delete";
+        break;
+      break;
+      default:
+        this.header.code = 404;
+        this.WriteJson( { "error" : "Method '" + method.toUpperCase() + "' not found" } );
+      break;
+    }
+
+    if( executionMethod !== null ){
+      let content = await this._api[executionMethod](this);
+      if( !(content instanceof Object ) && !(content instanceof Array) ){
+        this.WriteJson( { warning : "Content type unexpected", content } );
+      }
+      else{
+        if( content instanceof Object && content.code ){
+          this.header.code = content.code;
+        }
+
+        this.WriteJson( content );
+      }
+    }
+
+    this.Render();
   }
 
   async RunPage() {
@@ -94,7 +162,7 @@ exports.ContentBuffer = class ContentBuffer extends Object{
       this.response.end( "500 Error with page '" + JSON.stringify( this.viewActionMethod.error ) + "'" );
     }
     else{
-      this.isAction = this.viewActionMethod.endsWith( "Action" ) || this.viewActionMethod.endsWith( "Deepaction" );
+      this.isAction = this.viewActionMethod.endsWith( "Action" );
       let continueRunning = await this._controller.InitControl(this, this._viewHelper);
       if( continueRunning !== false && !this.response.finished ) {
         try {
@@ -135,7 +203,7 @@ exports.ContentBuffer = class ContentBuffer extends Object{
   Render( renderTemplate = false ){
     clearTimeout( this._viewControlTimeout );
 
-    if( this._content === "" || renderTemplate === true ){
+    if( this._viewHelper && ( this._content === "" || renderTemplate === true ) ){
       this._content = htmlMinify(this._viewHelper.Render(), {
         minifyJS : false,
         removeComments : true,

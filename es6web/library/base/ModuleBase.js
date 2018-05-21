@@ -13,6 +13,7 @@ exports.ModuleBase = class ModuleBase extends Object{
     super();
     this._service = service;
     this._controllers = this._controllers || {};
+    this._apis = this._apis || {};
     this._path = moduleDirectory;
     this._absolutePath = this._path;
     if( !path.isAbsolute( moduleDirectory ) ){
@@ -32,12 +33,13 @@ exports.ModuleBase = class ModuleBase extends Object{
     }
     this._methodMap = {};
     this._moduleName = moduleDirectory.split( "/" )[moduleDirectory.split( "/" ).length - 1];
-    this._controllerBase = this._controllerBase || "base/ControllerBase";
-    this._modelBase = this._modelBase || "base/ModelBase";
+    //this._controllerBase = this._controllerBase || "base/ControllerBase";
+    //this._modelBase = this._modelBase || "base/ModelBase";
     this._moduleDirectory = moduleDirectory;
     this._InitFileIndex();
     this.SetupModule();
     this._InitControllers();
+    this._InitApis();
     this._InitModels();
     this._InitViews();
   }
@@ -46,12 +48,11 @@ exports.ModuleBase = class ModuleBase extends Object{
     return this._path;
   }
 
-  SetDefaults( defaultController, defaultAction, defaultView, defaultActionView, defaultEvent, defaultLayout ){
+  SetDefaults( defaultController, defaultAction, defaultView, defaultActionView, defaultLayout ){
     this._defaultController = defaultController;
     this._defaultAction = defaultAction;
     this._defaultView = defaultView;
     this._defaultActionView = defaultActionView;
-    this._defaultEvent = defaultEvent;
     this._defaultLayout = defaultLayout;
   }
 
@@ -222,6 +223,17 @@ exports.ModuleBase = class ModuleBase extends Object{
     }
   }
 
+  async _InitApis(){
+    this._apiDirectory = path.normalize( path.resolve( this._moduleDirectory + "/Apis/" ) );
+    let apis = await this._LoadAdditionalFiles( this._apiDirectory );
+    for( let i = 0; i < apis.length; i++ ){
+      let apiName = apis[i].split( "/" )[apis[i].split( "/" ).length - 1].replace( ".js", "" );
+      let apiObject = dynamic( this._apiDirectory + "/" + apis[i] )[apiName];
+      let apiPath = apis[i].replace( ".js", "" ).toLowerCase();
+      this._apis[apiPath] = apiObject;
+    }
+  }
+
   async _InitViews(){
     this._viewDirectory = path.normalize( path.resolve( this._moduleDirectory + "/Views/" ) );
     let views = await this._LoadAdditionalFiles( this._viewDirectory ); //Replace with dynamic watch//
@@ -308,6 +320,14 @@ exports.ModuleBase = class ModuleBase extends Object{
     return null;
   }
 
+  GetApi( apiPath ){
+    if( this._apis[apiPath] !== undefined ){
+      return this._apis[apiPath];
+    }
+
+    return null;
+  }
+
   GetModel( modelName ){
     return this._models[modelName.toLowerCase()] || null;
   }
@@ -315,30 +335,27 @@ exports.ModuleBase = class ModuleBase extends Object{
   GetMethod(controllerName, actionName) {
     let methodMap = this._methodMap[controllerName];
     if( actionName === null ) {
-      if( methodMap["globaldeepview"] || methodMap["globaldeepaction"] ){
-        return methodMap["globaldeepview"] || methodMap["globaldeepaction"];
+      if( methodMap["indexview"] || methodMap["indexaction"] ){
+        return methodMap["indexview"] || methodMap["indexaction"];
       }
       return null;
     }
-    actionName = actionName.toLowerCase().replace( /-/g, "" );
-    if( actionName.indexOf( "/" ) === -1 ){
-      if( methodMap[actionName + "view"] ){
-        return methodMap[actionName + "view"];
+    
+    //Map until we find a view or action//
+    let actionArray = actionName.split( "/" );
+    let currentSteps = [];
+    for( let i = 0; i < actionArray.length; i++ ){
+      currentSteps.push( actionArray[i] );
+      let currentNamedStep = actionName.toLowerCase().replace( /-/g, "" );
+      if( methodMap[currentNamedStep+"view"] ){
+        return methodMap[currentNamedStep+"view"];
       }
-      if( methodMap[actionName + "action"] ){
-        return methodMap[actionName + "action"];
+      else if( methodMap[currentNamedStep+"action"] ){
+        return methodMap[currentNamedStep+"action"];
       }
     }
-    else{
-      if( methodMap[actionName.split("/")[0] + "deepview"] ){
-        return methodMap[actionName.split("/")[0] + "deepview"];
-      }
-      if( methodMap[actionName.split("/")[0] + "deepaction"] ){
-        return methodMap[actionName.split("/")[0] + "deepaction"];
-      }
-      if( methodMap["globaldeepview"] ){
-        return methodMap["globaldeepview"];
-      }
+    if( methodMap["indexview"] ){
+      return methodMap["indexview"];
     }
 
     return null;
@@ -375,15 +392,9 @@ exports.ModuleBase = class ModuleBase extends Object{
     }
     let error = null;
     if( methodName !== null ){
-      if( methodName.endsWith( "View" ) || methodName.endsWith( "Deepview" ) ){
+      if( methodName.endsWith( "View" ) ){
         controller.SetLayoutTemplate( controller.defaultLayout || this._defaultLayout );
         //Must load a view//
-        if( methodName.endsWith( "GlobalDeepView" ) ){
-          actionView = "global";
-        }
-        if( methodName.endsWith( "Deepview" ) ){
-          actionView = actionView.split( "/" )[0];
-        }
         if( this._views["actions"][controllerName + "/" + actionView] ){
           //Controller action view.
           controller.SetViewTemplate( controllerName + "/" + actionView, "actions" );
@@ -416,7 +427,7 @@ exports.ModuleBase = class ModuleBase extends Object{
     }
     else{
       //Method not found 404//
-      error = { code : "404", requestUri : router };
+      error = { code : "404" };
     }
 
     if( error === null ){
@@ -471,8 +482,7 @@ exports.ModuleBase = class ModuleBase extends Object{
   get defaultRoutes(){
     return {
       controller : this._defaultController,
-      actionView : this._defaultActionView,
-      event : this._defaultEvent
+      actionView : this._defaultActionView
     }
   }
 
