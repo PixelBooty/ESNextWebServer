@@ -128,16 +128,21 @@ exports.Router = class Router extends Object{
       return;
     }
 
-    let controllerArgument = urlRoute.split( "/" );
+    let controllerArgument = urlRoute;
     let controllerName = controllerArgument[0];
-    if( controllerName === "api" ){
-      let apiName = controllerArgument[1];
-      controllerArgument.splice( 1, 1 );
-      controllerArgument.splice( 0, 1 );
-      let params = controllerArgument;
-      if( params.length > 0 ){
-        this.params = params;
+    if( urlRoute.startsWith( "api/" ) ){
+      urlRoute = urlRoute.substring( 4 );
+      let apiName = "";
+      for( let apiPath in this._module._apis ){
+        if( urlRoute.startsWith( apiPath ) ){
+          apiName = apiPath;
+          urlRoute = urlRoute.replace( apiPath, "" );
+          if( urlRoute.startsWith( "/" ) ){
+            urlRoute = urlRoute.substring( 1 );
+          }
+        }
       }
+      this.params = urlRoute !== "" ? urlRoute.split( "/" ) : [];
       this._api = this._module.GetApi( apiName );
       if( this._api === null ){
         this._routeError.push( { code : 404, message : "Cannot find requested api endpoint " + apiName + "." } );
