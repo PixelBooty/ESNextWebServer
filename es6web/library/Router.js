@@ -128,7 +128,7 @@ exports.Router = class Router extends Object{
       return;
     }
 
-    let controllerArgument = urlRoute;
+    let controllerArgument = urlRoute.split( "/" );
     let controllerName = controllerArgument[0];
     if( urlRoute.startsWith( "api/" ) ){
       urlRoute = urlRoute.substring( 4 );
