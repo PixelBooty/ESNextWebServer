@@ -108,12 +108,7 @@ exports.ContentBuffer = class ContentBuffer extends Object{
     await this._api.InitApi(this);
     switch( method ){
       case "get":
-        if( this.params ){
-          executionMethod = "GetById";
-        }
-        else{
-          executionMethod = "Get";
-        }
+        executionMethod = "Get";
         break;
       case "post":
         executionMethod = "Post";

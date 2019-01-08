@@ -21,10 +21,6 @@ exports.ApiBase = class ControllerBase extends Object{
     return this._Error404( "GET" );
   }
 
-  GetById( content ){
-    return this._Error404( "GET with params");
-  }
-
   Post( content ){
     return this._Error404( "POST" );
   }
