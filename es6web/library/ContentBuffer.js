@@ -29,6 +29,7 @@ exports.ContentBuffer = class ContentBuffer extends Object{
     this.actionMethod = "";
     this.method = router.method;
     this.uri = router.request.url;
+    this.requestHeader = router.request.headers;
 
     if( this.router.isFile ){
       let extType = this.router.file.fileName.substr( this.router.file.fileName.lastIndexOf( "." ) + 1 ).toLowerCase();
@@ -105,7 +106,10 @@ exports.ContentBuffer = class ContentBuffer extends Object{
     let method = this.router.method;
     this.header.contentType = "application/json";
     let executionMethod = null;
-    await this._api.InitApi(this);
+    const initContent = await this._api.InitApi(this);
+    if( initContent && initContent instanceof Object ){
+      this.WriteJson( initContent );
+    }
     switch( method ){
       case "get":
         executionMethod = "Get";
@@ -129,7 +133,7 @@ exports.ContentBuffer = class ContentBuffer extends Object{
       break;
     }
 
-    if( executionMethod !== null ){
+    if( executionMethod !== null && this._content === "" ){
       let content = await this._api[executionMethod](this);
       if( !(content instanceof Object ) && !(content instanceof Array) ){
         this.WriteJson( { warning : "Content type unexpected", content } );
